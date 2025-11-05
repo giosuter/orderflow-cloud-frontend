@@ -1,0 +1,15 @@
+# Node/Angular
+/node_modules/
+/dist/
+/tmp/
+/.angular/
+/coverage/
+/package-lock.json
+
+# OS / Misc
+.DS_Store
+.env
+*.log
+
+# VS Code (optional)
+.vscode/
