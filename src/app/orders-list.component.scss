@@ -1,0 +1,64 @@
+.orders-list {
+  padding: 1.5rem;
+}
+
+.orders-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+
+  button {
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-size: 0.9rem;
+
+    &:hover {
+      background: #e6e6e6;
+    }
+  }
+}
+
+.orders-list__state {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+
+  &--error {
+    color: #b00020;
+    font-weight: 600;
+  }
+}
+
+.orders-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+
+  th,
+  td {
+    border: 1px solid #ddd;
+    padding: 0.35rem 0.5rem;
+  }
+
+  th {
+    text-align: left;
+    background: #fafafa;
+  }
+
+  .orders-list__cell--numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #fcfcfc;
+  }
+}

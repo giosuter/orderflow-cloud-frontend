@@ -1,37 +1,25 @@
-// Application-wide providers for Angular 19 standalone setup.
-// We enable:
-//   • Routing support
-//   • HttpClient (required for calling the OrderFlow API)
-//   • Standard browser animations
+// Global Angular application configuration.
+// This is used by main.ts via bootstrapApplication(..., appConfig).
 //
-// NOTE: This file remains deliberately small.
-//       All feature-specific providers belong to feature modules/components.
+// Responsibilities:
+//   • Register the Angular Router with our app routes
+//   • Register HttpClient so services like OrderService can call the backend
 
 import { ApplicationConfig } from '@angular/core';
-import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
-import { provideAnimations } from '@angular/platform-browser/animations';
+import {
+  provideHttpClient,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    /**
-     * Enables router functionality for the entire application.
-     * Routes are defined in app.routes.ts.
-     */
+    // Router with our route definitions
     provideRouter(routes),
 
-    /**
-     * Use the modern HttpClient based on the Fetch API.
-     * This avoids CORS preflight issues and integrates well with backend APIs.
-     */
-    provideHttpClient(withFetch()),
-
-    /**
-     * Enables Angular animations (optional but recommended).
-     * Many UI components rely on this by default.
-     */
-    provideAnimations(),
+    // HttpClient with DI-based interceptors (future-proof)
+    provideHttpClient(withInterceptorsFromDi()),
   ],
 };

@@ -1,0 +1,48 @@
+<!-- File: src/app/orders-list.component.html -->
+
+<section class="orders-list">
+  <header class="orders-list__header">
+    <h2>Orders</h2>
+    <button type="button" (click)="loadOrders()">Reload</button>
+  </header>
+
+  <!-- Loading indicator -->
+  <p class="orders-list__state" *ngIf="loading">
+    Loading orders…
+  </p>
+
+  <!-- Error state -->
+  <p class="orders-list__state orders-list__state--error" *ngIf="!loading && error">
+    {{ error }}
+  </p>
+
+  <!-- Empty state -->
+  <p class="orders-list__state" *ngIf="!loading && !error && orders.length === 0">
+    No orders found.
+  </p>
+
+  <!-- Table with data -->
+  <table
+    class="orders-list__table"
+    *ngIf="!loading && !error && orders.length > 0"
+  >
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Code</th>
+        <th>Status</th>
+        <th class="orders-list__cell--numeric">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let order of orders">
+        <td>{{ order.id }}</td>
+        <td>{{ order.code }}</td>
+        <td>{{ order.status }}</td>
+        <td class="orders-list__cell--numeric">
+          {{ order.total | number : '1.2-2' }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
