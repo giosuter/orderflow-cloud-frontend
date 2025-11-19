@@ -1,13 +1,16 @@
 // Default environment: used for `ng serve` and `ng build` (development).
-// This is your LOCAL backend on localhost:8080 with context path /orderflow-api.
+// This points to your LOCAL backend on localhost:8080 with context path /orderflow-api
+// and all REST endpoints under /api.
 
+/**
+ * Development environment configuration.
+ *
+ * All frontend HTTP calls should be based on `apiBaseUrl`, for example:
+ *   `${environment.apiBaseUrl}/orders`
+ * which resolves to:
+ *   http://localhost:8080/orderflow-api/api/orders
+ */
 export const environment = {
   production: false,
-  /**
-   * Base URL for the OrderFlow API (dev).
-   *
-   * All frontend HTTP calls should be based on this value, e.g.:
-   *   `${environment.apiBaseUrl}/api/orders`
-   */
-  apiBaseUrl: 'http://localhost:8080/orderflow-api',
+  apiBaseUrl: 'http://localhost:8080/orderflow-api/api',
 };
