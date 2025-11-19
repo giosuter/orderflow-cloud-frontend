@@ -2,55 +2,55 @@
   <header class="orders-header">
     <h2>Orders</h2>
     <p class="orders-subtitle">
-      All orders returned by <code>/orderflow-api/api/orders</code>.
+      Below you see all orders loaded from
+      <code>/orderflow-api/api/orders</code>.
     </p>
   </header>
 
   <!-- Loading state -->
-  <div *ngIf="isLoading" class="orders-state orders-state--loading">
-    Loading orders…
-  </div>
+  <section *ngIf="isLoading" class="orders-state orders-loading">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Loading orders…</p>
+  </section>
 
   <!-- Error state -->
-  <div
+  <section
     *ngIf="!isLoading && errorMessage"
-    class="orders-state orders-state--error"
+    class="orders-state orders-error orders-error-box"
+    data-testid="orders-error"
   >
-    {{ errorMessage }}
-  </div>
+    <h3>Could not load orders</h3>
+    <p>{{ errorMessage }}</p>
+  </section>
 
-  <!-- Empty state -->
-  <div
-    *ngIf="!isLoading && !errorMessage && orders.length === 0"
-    class="orders-state orders-state--empty"
+  <!-- Data state -->
+  <section
+    *ngIf="!isLoading && !errorMessage"
+    class="orders-table-wrapper"
   >
-    No orders found.
-  </div>
+    <!-- Empty state -->
+    <p *ngIf="orders.length === 0" class="orders-empty">
+      No orders found.
+    </p>
 
-  <!-- Data table -->
-  <table
-    *ngIf="!isLoading && !errorMessage && orders.length > 0"
-    class="orders-table"
-  >
-    <thead>
-      <tr>
-        <th class="col-id">ID</th>
-        <th class="col-code">Code</th>
-        <th class="col-status">Status</th>
-        <th class="col-total">Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let order of orders">
-        <td class="col-id">{{ order.id }}</td>
-        <td class="col-code">{{ order.code }}</td>
-        <td class="col-status">
-          {{ asStatusLabel(order.status) }}
-        </td>
-        <td class="col-total">
-          {{ order.total | number : '1.2-2' }}
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <!-- Table with data -->
+    <table *ngIf="orders.length > 0" class="orders-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Code</th>
+          <th>Status</th>
+          <th class="right">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders">
+          <td>{{ order.id }}</td>
+          <td>{{ order.code }}</td>
+          <td>{{ asStatusLabel(order.status) }}</td>
+          <td class="right">{{ order.total | number: '1.2-2' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </section>
