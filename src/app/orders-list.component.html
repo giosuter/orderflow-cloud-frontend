@@ -1,46 +1,56 @@
-<section class="orders-list">
-  <h2>Orders</h2>
+<section class="orders-page">
+  <header class="orders-header">
+    <h2>Orders</h2>
+    <p class="orders-subtitle">
+      All orders returned by <code>/orderflow-api/api/orders</code>.
+    </p>
+  </header>
 
-  <p class="hint">
-    Below you see all orders loaded from
-    <code>/orderflow-api/api/orders</code>.
-  </p>
-
-  <!-- Loading indicator -->
-  <div *ngIf="loading" class="state state-loading">
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="orders-state orders-state--loading">
     Loading orders…
   </div>
 
-  <!-- Error message -->
-  <div *ngIf="!loading && errorMessage" class="state state-error">
+  <!-- Error state -->
+  <div
+    *ngIf="!isLoading && errorMessage"
+    class="orders-state orders-state--error"
+  >
     {{ errorMessage }}
   </div>
 
-  <!-- Table with orders -->
+  <!-- Empty state -->
+  <div
+    *ngIf="!isLoading && !errorMessage && orders.length === 0"
+    class="orders-state orders-state--empty"
+  >
+    No orders found.
+  </div>
+
+  <!-- Data table -->
   <table
-    *ngIf="!loading && !errorMessage && orders.length > 0"
+    *ngIf="!isLoading && !errorMessage && orders.length > 0"
     class="orders-table"
   >
     <thead>
       <tr>
-        <th>ID</th>
-        <th>Code</th>
-        <th>Status</th>
-        <th>Total</th>
+        <th class="col-id">ID</th>
+        <th class="col-code">Code</th>
+        <th class="col-status">Status</th>
+        <th class="col-total">Total</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let order of orders; trackBy: trackByOrderId">
-        <td>{{ order.id }}</td>
-        <td>{{ order.code }}</td>
-        <td>{{ displayStatus(order.status) }}</td>
-        <td>{{ order.total | number : '1.2-2' }}</td>
+      <tr *ngFor="let order of orders">
+        <td class="col-id">{{ order.id }}</td>
+        <td class="col-code">{{ order.code }}</td>
+        <td class="col-status">
+          {{ asStatusLabel(order.status) }}
+        </td>
+        <td class="col-total">
+          {{ order.total | number : '1.2-2' }}
+        </td>
       </tr>
     </tbody>
   </table>
-
-  <!-- Empty state -->
-  <p *ngIf="!loading && !errorMessage && orders.length === 0" class="state">
-    No orders found.
-  </p>
 </section>

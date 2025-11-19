@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 
 import { Order, OrderStatus } from './order.model';
 import { OrderService } from './order.service';
@@ -7,37 +7,36 @@ import { OrderService } from './order.service';
 /**
  * OrdersListComponent
  *
- * Responsibilities:
- *  - On init, load all orders from the backend via OrderService.
- *  - Show loading state while the HTTP call is in progress.
- *  - Show a simple error message if the HTTP call fails.
- *  - Render the list of orders in a basic HTML table.
+ * This component:
+ *  - calls the REST API via OrderService.getAll()
+ *  - shows a loading state while the HTTP call is in progress
+ *  - shows an error message if loading fails
+ *  - renders a simple HTML table with all orders when data is available
  *
- * This component is intentionally kept simple:
- *  - No pagination yet
- *  - No filtering or sorting yet
- * Those can be added safely in later steps.
+ * The actual HTTP base URL is controlled centrally via:
+ *   src/environments/environment.ts (dev)
+ *   src/environments/environment.prod.ts (prod)
  */
 @Component({
   selector: 'app-orders-list',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './orders-list.component.html',
-  styleUrl: './orders-list.component.scss',
+  styleUrls: ['./orders-list.component.scss'],
 })
 export class OrdersListComponent implements OnInit {
   /**
-   * The list of orders returned by the backend.
+   * All orders returned by the backend.
    */
   orders: Order[] = [];
 
   /**
-   * True while we are waiting for the HTTP response.
+   * True while the HTTP request is running.
    */
-  loading = false;
+  isLoading = false;
 
   /**
-   * Holds a simple user-friendly error message when something goes wrong.
+   * Non-null if an error occurred while loading.
    */
   errorMessage: string | null = null;
 
@@ -48,43 +47,47 @@ export class OrdersListComponent implements OnInit {
   }
 
   /**
-   * Load all orders from the backend.
+   * Triggers a refresh of the orders list from the backend.
    *
-   * We keep this in a separate method so we can:
-   *  - Call it from ngOnInit()
-   *  - Potentially call it from a "Refresh" button later
+   * Currently just called on init, but we can later wire it to
+   * a "Refresh" button.
    */
   loadOrders(): void {
-    this.loading = true;
+    this.isLoading = true;
     this.errorMessage = null;
 
     this.orderService.getAll().subscribe({
       next: (orders) => {
         this.orders = orders;
-        this.loading = false;
+        // In the happy-path we keep isLoading true until complete()
+        // is called below. That ensures a consistent lifecycle.
       },
       error: (err) => {
         console.error('Failed to load orders', err);
-        this.errorMessage = 'Failed to load orders. Please try again later.';
-        this.loading = false;
+
+        this.errorMessage =
+          'Failed to load orders from the server. Please try again.';
+
+        // IMPORTANT:
+        // When an observable errors, complete() is NOT called.
+        // We MUST reset isLoading here, otherwise the template
+        // condition `!isLoading && errorMessage` never becomes true
+        // and the error state is never displayed.
+        this.isLoading = false;
+      },
+      complete: () => {
+        // For a successful request, complete() is called and we
+        // can safely turn off the loading indicator here.
+        this.isLoading = false;
       },
     });
   }
 
   /**
-   * trackBy function used by *ngFor to avoid re-rendering
-   * unchanged rows when the array changes.
+   * Small helper for the template to render the enum as a string.
+   * (Useful later if we ever store numeric enum values instead of strings.)
    */
-  trackByOrderId(index: number, order: Order): number | undefined {
-    return order.id ?? index;
-  }
-
-  /**
-   * Optional helper for rendering: convert enum to a human-readable label.
-   * For now we just reuse the enum value, but we keep this method in case we
-   * want to map NEW -> "New", PAID -> "Paid", etc.
-   */
-  displayStatus(status: OrderStatus): string {
+  asStatusLabel(status: OrderStatus): string {
     return status;
   }
 }
