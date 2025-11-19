@@ -1,10 +1,19 @@
 import { TestBed } from '@angular/core/testing';
+import { RouterOutlet } from '@angular/router';
+
 import { AppComponent } from './app.component';
 
+/**
+ * Basic tests for the root shell component.
+ *
+ * We verify:
+ *  - the component can be created
+ *  - the template contains a <router-outlet> (routing shell)
+ */
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [AppComponent, RouterOutlet],
     }).compileComponents();
   });
 
@@ -14,16 +23,13 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'orderflow-cloud-frontend' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('orderflow-cloud-frontend');
-  });
-
-  it('should render title', () => {
+  it('should contain a router-outlet in the template', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
+
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, orderflow-cloud-frontend');
+    const outlet = compiled.querySelector('router-outlet');
+
+    expect(outlet).not.toBeNull();
   });
 });
