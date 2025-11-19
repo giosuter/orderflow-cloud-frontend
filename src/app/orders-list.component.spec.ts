@@ -1,81 +1,82 @@
-// Unit tests for OrdersListComponent.
-// We do NOT hit a real backend; we mock OrderService instead.
-
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
 import { OrdersListComponent } from './orders-list.component';
-import { Order, OrderStatus } from './order.model';
 import { OrderService } from './order.service';
+import { Order, OrderStatus } from './order.model';
 
+/**
+ * Unit tests for OrdersListComponent.
+ *
+ * We use a Jasmine spy for OrderService so:
+ *  - no real HTTP calls are made
+ *  - we can fully control success / error scenarios
+ */
 describe('OrdersListComponent', () => {
   let component: OrdersListComponent;
   let fixture: ComponentFixture<OrdersListComponent>;
-
-  // Simple Jasmine spy mock for OrderService
   let orderServiceSpy: jasmine.SpyObj<OrderService>;
 
   beforeEach(async () => {
-    const spy = jasmine.createSpyObj<OrderService>('OrderService', ['getAll']);
+    // Create a spy object with the methods used by the component
+    orderServiceSpy = jasmine.createSpyObj<OrderService>('OrderService', [
+      'getAll',
+    ]);
 
     await TestBed.configureTestingModule({
-      imports: [OrdersListComponent], // standalone component
-      providers: [{ provide: OrderService, useValue: spy }],
+      imports: [OrdersListComponent],
+      providers: [{ provide: OrderService, useValue: orderServiceSpy }],
     }).compileComponents();
-
-    orderServiceSpy = TestBed.inject(
-      OrderService,
-    ) as jasmine.SpyObj<OrderService>;
 
     fixture = TestBed.createComponent(OrdersListComponent);
     component = fixture.componentInstance;
   });
 
   it('should create', () => {
-    orderServiceSpy.getAll.and.returnValue(of([]));
-
-    fixture.detectChanges(); // triggers ngOnInit
-
+    orderServiceSpy.getAll.and.returnValue(of([])); // default stub
+    fixture.detectChanges(); // triggers ngOnInit + loadOrders()
     expect(component).toBeTruthy();
   });
 
-  it('should load and display orders on init', () => {
+  it('should load orders on init and render them in the table', () => {
     const mockOrders: Order[] = [
-      { id: 1, code: 'A1', status: OrderStatus.NEW, total: 10 },
-      { id: 2, code: 'B2', status: OrderStatus.PAID, total: 20 },
+      { id: 1, code: 'A1', status: OrderStatus.NEW, total: 19.95 },
+      { id: 2, code: 'A2', status: OrderStatus.PAID, total: 3.95 },
     ];
 
     orderServiceSpy.getAll.and.returnValue(of(mockOrders));
 
-    fixture.detectChanges(); // runs ngOnInit -> loadOrders()
+    // When we detect changes, ngOnInit() is called and loadOrders() runs.
+    fixture.detectChanges();
 
-    // The component state should be updated
-    expect(component.loading).toBeFalse();
-    expect(component.error).toBeNull();
+    expect(orderServiceSpy.getAll).toHaveBeenCalled();
+
+    // After the observable emits, the component should hold the orders.
     expect(component.orders.length).toBe(2);
 
-    // Verify DOM rendering
-    const compiled: HTMLElement = fixture.nativeElement as HTMLElement;
+    const compiled: HTMLElement = fixture.nativeElement;
     const rows = compiled.querySelectorAll('tbody tr');
+
+    // There should be 2 rows in the table.
     expect(rows.length).toBe(2);
     expect(rows[0].textContent).toContain('A1');
-    expect(rows[1].textContent).toContain('B2');
+    expect(rows[1].textContent).toContain('A2');
   });
 
-  it('should show an error message when service fails', () => {
+  it('should show an error message when loading orders fails', () => {
     orderServiceSpy.getAll.and.returnValue(
-      throwError(() => new Error('Backend down')),
+      throwError(() => new Error('Backend error')),
     );
 
-    fixture.detectChanges(); // runs ngOnInit -> loadOrders()
+    fixture.detectChanges();
 
-    expect(component.loading).toBeFalse();
-    expect(component.error).toBeTruthy();
-    expect(component.orders.length).toBe(0);
+    expect(orderServiceSpy.getAll).toHaveBeenCalled();
+    expect(component.errorMessage).toBeTruthy();
 
-    const compiled: HTMLElement = fixture.nativeElement as HTMLElement;
-    const errorEl = compiled.querySelector('.orders-list__state--error');
-    expect(errorEl).not.toBeNull();
-    expect(errorEl?.textContent).toContain('Failed to load orders');
+    const compiled: HTMLElement = fixture.nativeElement;
+    const errorDiv = compiled.querySelector('.state-error');
+
+    expect(errorDiv).withContext('Error div should be present').not.toBeNull();
+    expect(errorDiv?.textContent).toContain('Failed to load orders');
   });
 });

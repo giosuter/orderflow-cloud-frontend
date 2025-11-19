@@ -1,48 +1,46 @@
-<!-- File: src/app/orders-list.component.html -->
-
 <section class="orders-list">
-  <header class="orders-list__header">
-    <h2>Orders</h2>
-    <button type="button" (click)="loadOrders()">Reload</button>
-  </header>
+  <h2>Orders</h2>
+
+  <p class="hint">
+    Below you see all orders loaded from
+    <code>/orderflow-api/api/orders</code>.
+  </p>
 
   <!-- Loading indicator -->
-  <p class="orders-list__state" *ngIf="loading">
+  <div *ngIf="loading" class="state state-loading">
     Loading orders…
-  </p>
+  </div>
 
-  <!-- Error state -->
-  <p class="orders-list__state orders-list__state--error" *ngIf="!loading && error">
-    {{ error }}
-  </p>
+  <!-- Error message -->
+  <div *ngIf="!loading && errorMessage" class="state state-error">
+    {{ errorMessage }}
+  </div>
 
-  <!-- Empty state -->
-  <p class="orders-list__state" *ngIf="!loading && !error && orders.length === 0">
-    No orders found.
-  </p>
-
-  <!-- Table with data -->
+  <!-- Table with orders -->
   <table
-    class="orders-list__table"
-    *ngIf="!loading && !error && orders.length > 0"
+    *ngIf="!loading && !errorMessage && orders.length > 0"
+    class="orders-table"
   >
     <thead>
       <tr>
         <th>ID</th>
         <th>Code</th>
         <th>Status</th>
-        <th class="orders-list__cell--numeric">Total</th>
+        <th>Total</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let order of orders">
+      <tr *ngFor="let order of orders; trackBy: trackByOrderId">
         <td>{{ order.id }}</td>
         <td>{{ order.code }}</td>
-        <td>{{ order.status }}</td>
-        <td class="orders-list__cell--numeric">
-          {{ order.total | number : '1.2-2' }}
-        </td>
+        <td>{{ displayStatus(order.status) }}</td>
+        <td>{{ order.total | number : '1.2-2' }}</td>
       </tr>
     </tbody>
   </table>
+
+  <!-- Empty state -->
+  <p *ngIf="!loading && !errorMessage && orders.length === 0" class="state">
+    No orders found.
+  </p>
 </section>

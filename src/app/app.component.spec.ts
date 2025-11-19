@@ -1,19 +1,25 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterOutlet } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { AppComponent } from './app.component';
 
 /**
- * Basic tests for the root shell component.
+ * Unit tests for the root AppComponent.
  *
- * We verify:
- *  - the component can be created
- *  - the template contains a <router-outlet> (routing shell)
+ * We import RouterTestingModule so that:
+ *  - routerLink / routerLinkActive / router-outlet
+ *    directives have all required providers (Router, ActivatedRoute, etc.).
+ *
+ * We keep the tests simple:
+ *  - app gets created
+ *  - title property has the expected value
+ *  - template contains a <router-outlet>
  */
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, RouterOutlet],
+      // For standalone components, we list AppComponent in imports.
+      imports: [RouterTestingModule, AppComponent],
     }).compileComponents();
   });
 
@@ -23,13 +29,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
+  it("should have the 'orderflow-cloud-frontend' title", () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance as AppComponent;
+    expect(app.title).toEqual('orderflow-cloud-frontend');
+  });
+
   it('should contain a router-outlet in the template', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-
     const compiled = fixture.nativeElement as HTMLElement;
-    const outlet = compiled.querySelector('router-outlet');
-
-    expect(outlet).not.toBeNull();
+    expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
 });

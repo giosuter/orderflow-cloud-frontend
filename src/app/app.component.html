@@ -1,6 +1,19 @@
 <header class="app-header">
-  <h1>OrderFlow Cloud</h1>
-  <p class="app-subtitle">Order management frontend</p>
+  <div class="app-header-main">
+    <h1>OrderFlow Cloud</h1>
+    <p class="app-subtitle">Order management frontend</p>
+  </div>
+
+  <nav class="app-nav">
+    <!-- We only have one route now, but we keep the structure ready -->
+    <a
+      routerLink="/orders"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      Orders
+    </a>
+  </nav>
 </header>
 
 <main class="app-content">
