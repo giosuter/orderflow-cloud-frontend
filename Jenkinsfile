@@ -34,14 +34,13 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                // Use npm from PATH (which now includes NVM’s bin)
                 sh 'npm ci'
             }
         }
 
         stage('Run unit tests') {
             steps {
-                sh 'npm test -- --watch=false'
+                sh 'npm test -- --watch=false --browsers FirefoxHeadless'
             }
         }
 
@@ -54,6 +53,17 @@ pipeline {
         stage('Archive build artifacts') {
             steps {
                 archiveArtifacts artifacts: 'dist/orderflow-cloud-frontend/**', fingerprint: true
+            }
+        }
+
+        stage('Deploy to Hostpoint') {
+            when {
+                branch 'main'       // deploy only from main
+            }
+            steps {
+                // Use your existing deployment script in the repo root
+                sh 'chmod +x ./deploy_orderflow_frontend_prod.sh'
+                sh './deploy_orderflow_frontend_prod.sh'
             }
         }
     }
