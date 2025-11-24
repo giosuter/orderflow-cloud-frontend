@@ -1,50 +1,61 @@
-<!-- src/app/orders-list.component.html -->
-
 <div class="orders-page">
-
   <header class="orders-header">
-    <h1>Orders</h1>
-    <button type="button" class="btn btn-primary" (click)="onReload()" [disabled]="loading">
-      {{ loading ? 'Loading…' : 'Reload' }}
+    <div>
+      <h1>Orders</h1>
+      <p class="subtitle">Order management frontend</p>
+    </div>
+
+    <!-- In future: button to create new order -->
+    <button type="button" class="btn btn-primary" disabled>
+      + New order
     </button>
   </header>
 
-  <!-- Error message (if any) -->
-  <div *ngIf="errorMessage" class="alert alert-error">
-    {{ errorMessage }}
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
   </div>
 
-  <!-- Filter bar -->
-  <section class="filter-bar">
+  <div class="filter-bar">
     <label for="codeFilter">Filter by code:</label>
     <input
       id="codeFilter"
       type="text"
-      [(ngModel)]="codeFilter"
-      (input)="onFilterChange()"
-      placeholder="Enter code substring…"
+      [(ngModel)]="filterCode"
+      (ngModelChange)="applyFilters()"
+      placeholder="e.g. ORD-2025"
     />
-  </section>
 
-  <!-- Loading indicator -->
-  <p *ngIf="loading && !errorMessage" class="loading-text">
+    <label for="statusFilter">Status:</label>
+    <select
+      id="statusFilter"
+      [(ngModel)]="filterStatus"
+      (ngModelChange)="applyFilters()"
+    >
+      <option value="">All</option>
+      <option *ngFor="let s of statusOptions" [ngValue]="s">
+        {{ s }}
+      </option>
+    </select>
+  </div>
+
+  <div *ngIf="loading" class="loading-text">
     Loading orders…
-  </p>
+  </div>
 
-  <!-- Empty state -->
-  <p *ngIf="!loading && !errorMessage && filteredOrders.length === 0" class="empty-text">
+  <div *ngIf="!loading && filteredOrders.length === 0" class="empty-text">
     No orders found.
-  </p>
+  </div>
 
-  <!-- Orders table -->
-  <div class="table-wrapper" *ngIf="!loading && filteredOrders.length > 0">
+  <div *ngIf="!loading && filteredOrders.length > 0" class="table-wrapper">
     <table class="orders-table">
       <thead>
         <tr>
           <th>ID</th>
           <th>Code</th>
           <th>Status</th>
+          <th>Customer</th>
           <th class="numeric">Total</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -52,16 +63,28 @@
           <td>{{ order.id }}</td>
           <td>{{ order.code }}</td>
           <td>
-            <span class="status-pill" [ngClass]="'status-' + (order.status || 'UNKNOWN')">
+            <span
+              class="status-pill"
+              [ngClass]="'status_' + (order.status || 'UNKNOWN')"
+            >
               {{ order.status || 'UNKNOWN' }}
             </span>
           </td>
+          <td>{{ order.customerName }}</td>
           <td class="numeric">
-            {{ order.total | number:'1.2-2' }}
+            {{ order.total | number: '1.2-2' }}
+          </td>
+          <td>
+            <button
+              type="button"
+              class="btn"
+              [routerLink]="['/orders', order.id]"
+            >
+              Details
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
-
 </div>

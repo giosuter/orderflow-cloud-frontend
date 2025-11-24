@@ -1,33 +1,42 @@
-/**
- * Enum of all known OrderStatus values used by the backend.
- *
- * Keep this in sync with ch.devprojects.orderflow.domain.OrderStatus
- * and the JSON values you see in Swagger (NEW, PAID, SHIPPED, ...).
- */
-export enum OrderStatus {
-  NEW = 'NEW',
-  PAID = 'PAID',
-  SHIPPED = 'SHIPPED',
-  CANCELLED = 'CANCELLED', // included for completeness
-}
+// src/app/order.model.ts
+//
+// Shared Order model for the Angular frontend.
+// This should reflect (at least) the fields returned by the backend
+// Order / OrderDto. Extra optional fields are safe: if the backend
+// doesn’t send them, they’ll just be `undefined` in the UI.
 
 /**
- * Frontend representation of an Order.
- *
- * This is aligned with OrderDto on the backend:
- *  - id:        technical identifier
- *  - code:      business identifier (ORD-123, etc.)
- *  - status:    one of the OrderStatus enum values
- *  - total:     total amount (numeric, in CHF or your chosen currency)
- *  - createdAt: ISO timestamp string from the backend
- *  - updatedAt: ISO timestamp string from the backend
+ * Allowed order statuses.
+ * Adjust this union type if your backend uses slightly different values.
+ */
+export type OrderStatus =
+  | 'NEW'
+  | 'OPEN'
+  | 'PAID'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'DONE'
+  | 'UNKNOWN';
+
+/**
+ * Order entity as used in the frontend.
  */
 export interface Order {
-  id?: number;                  // optional for newly-created orders
-  code: string;
-  status: OrderStatus;
-  total: number;
+  id: number;
 
+  // Business code for the order, e.g. "ORD-2025-001"
+  code: string;
+
+  // Technical status of the order
+  status?: OrderStatus;
+
+  // Name of the customer (used in the orders-list.component.html template)
+  customerName?: string;
+
+  // Total amount of the order (number so we can use Angular number pipe)
+  total?: number;
+
+  // Optional audit fields (if your backend provides them)
   createdAt?: string;
   updatedAt?: string;
 }

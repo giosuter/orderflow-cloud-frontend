@@ -1,24 +1,18 @@
 import { Routes } from '@angular/router';
 import { OrdersListComponent } from './orders-list.component';
+import { OrderDetailComponent } from './order-detail.component';
 
 /**
- * Global application routes.
- *
- * Canonical rule (aligned with backend URL.md):
- * - Frontend route for the orders list: `/orders`
- * - Default route `/` redirects to `/orders`
- * - No trailing slash in the route paths
+ * Application routes:
+ *  - ''          → redirect to '/orders'
+ *  - '/orders'   → list of all orders
+ *  - '/orders/:id' → details of a single order
  */
 export const routes: Routes = [
-  {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: 'orders',
-  },
-  {
-    path: 'orders',
-    component: OrdersListComponent,
-  },
-  // Optional wildcard: later we can show a 404 page
-  // { path: '**', redirectTo: 'orders' },
+  { path: '', pathMatch: 'full', redirectTo: 'orders' },
+  { path: 'orders', component: OrdersListComponent },
+  { path: 'orders/:id', component: OrderDetailComponent },
+
+  // Fallback route (optional)
+  { path: '**', redirectTo: 'orders' },
 ];
