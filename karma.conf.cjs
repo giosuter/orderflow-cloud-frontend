@@ -1,4 +1,12 @@
-// Purpose: Configure Karma + Jasmine for Angular unit tests and run them in Firefox.
+// karma.conf.cjs
+// Purpose: Configure Karma + Jasmine for Angular unit tests.
+//
+// - Local dev: run tests visually in Firefox.
+//   Command: `npm test`  (or `ng test`)
+// - CI (Jenkins): run tests in headless Firefox.
+//   Command: `npx ng test --watch=false --browsers=FirefoxHeadless`
+//
+// The "FirefoxHeadless" launcher is provided by karma-firefox-launcher.
 
 module.exports = function (config) {
   config.set({
@@ -18,7 +26,7 @@ module.exports = function (config) {
     ],
 
     client: {
-      // Keep the Jasmine Spec Runner output visible in the browser
+      // Keep the Jasmine Spec Runner output visible in the browser (for local dev)
       clearContext: false,
     },
 
@@ -41,13 +49,22 @@ module.exports = function (config) {
     colors: true,
     logLevel: config.LOG_INFO,
 
-    // Watch files and re-run tests on changes
+    // Watch files and re-run tests on changes (good for local dev)
     autoWatch: true,
 
-    // IMPORTANT: run tests in Firefox instead of Chrome
+    // Default browser for local development: normal Firefox
     browsers: ['Firefox'],
 
-    // Keep Karma running (watch mode) by default
+    // Extra CI-friendly launcher: headless Firefox
+    customLaunchers: {
+      FirefoxHeadless: {
+        base: 'Firefox',
+        flags: ['-headless'],
+      },
+    },
+
+    // For CI we will override singleRun on the CLI.
+    // Local dev: keep Karma running.
     singleRun: false,
 
     // Re-run tests when files change

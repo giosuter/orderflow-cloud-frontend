@@ -56,7 +56,9 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "baseHref": "/orderflow-cloud/",
+              "deployUrl": "/orderflow-cloud/"
             },
             "development": {
               "optimization": false,
