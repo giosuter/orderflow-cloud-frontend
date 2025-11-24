@@ -1,8 +1,26 @@
+// Jenkinsfile (frontend CI for OrderFlow Cloud)
+//
+// Pipeline goals:
+//  - Clone orderflow-cloud-frontend repo
+//  - Install Node dependencies with `npm ci`
+//  - Run Angular unit tests in HEADLESS Firefox
+//  - Build Angular app for production (base href /orderflow-cloud/)
+//  - Archive dist/ as build artifact
+//
+// Notes / Assumptions:
+//  - Jenkins has Node.js + npm installed and available on PATH.
+//  - Jenkins has Firefox installed (headless OK).
+//  - Workspace is a clean clone of the GitHub repo.
+
 pipeline {
     agent any
 
+    environment {
+        // Make sure Jenkins can find `node` and `npm` from NVM
+        PATH = "/Users/giovannisuter/.nvm/versions/node/v22.20.0/bin:${PATH}"
+    }
+
     options {
-        // Show timestamps and colors in the build log
         timestamps()
         ansiColor('xterm')
     }
@@ -16,22 +34,20 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                // Use absolute path to npm so Jenkins can find it
-                sh '/Users/giovannisuter/.nvm/versions/node/v22.20.0/bin/npm ci'
+                // Use npm from PATH (which now includes NVM’s bin)
+                sh 'npm ci'
             }
         }
 
         stage('Run unit tests') {
             steps {
-                // Same command as locally, just with absolute npm path
-                sh '/Users/giovannisuter/.nvm/versions/node/v22.20.0/bin/npm test -- --watch=false'
+                sh 'npm test -- --watch=false'
             }
         }
 
         stage('Build production bundle') {
             steps {
-                // Build for production with correct base href
-                sh '/Users/giovannisuter/.nvm/versions/node/v22.20.0/bin/npm run build -- --configuration production --base-href /orderflow-cloud/'
+                sh 'npm run build -- --configuration production --base-href /orderflow-cloud/'
             }
         }
 
