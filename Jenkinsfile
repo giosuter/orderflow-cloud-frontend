@@ -16,65 +16,46 @@ pipeline {
     agent any
 
     options {
-        // Stop very long builds
-        timeout(time: 30, unit: 'MINUTES')
-    }
-
-    environment {
-        // Adjust if you use a Node tool in Jenkins (e.g. with NodeJS plugin)
-        // PATH = "${tool 'node18'}/bin:${env.PATH}"
+        // Show timestamps in the console output
+        timestamps()
+        // Use ANSI colors in the log (if the plugin is installed)
+        ansiColor('xterm')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // For a multibranch pipeline, Jenkins will manage the checkout.
-                // For a classic pipeline job, you can add:
-                // checkout scm
-                echo 'Checking out source code...'
+                // In a "Pipeline script from SCM" job, Jenkins already checks out the code,
+                // but this is harmless and keeps the stage visible.
                 checkout scm
             }
         }
 
         stage('Install dependencies') {
             steps {
-                echo 'Running npm ci...'
                 sh 'npm ci'
             }
         }
 
-        stage('Run unit tests (headless)') {
+        stage('Run unit tests') {
             steps {
-                echo 'Running Angular tests in headless Firefox...'
-                // Use FirefoxHeadless defined in karma.conf.cjs
-                sh 'npx ng test --watch=false --browsers=FirefoxHeadless --progress=false'
+                // Same as your local command: opens Firefox, runs tests once, then exits
+                sh 'npm test -- --watch=false'
             }
         }
 
-        stage('Build Angular app (production)') {
+        stage('Build production bundle') {
             steps {
-                echo 'Building Angular app for production with base-href /orderflow-cloud/...'
-                sh 'npx ng build --configuration production --base-href=/orderflow-cloud/'
+                // Uses the local Angular CLI via npm script
+                sh 'npm run build -- --configuration production --base-href /orderflow-cloud/'
             }
         }
 
-        stage('Archive dist') {
+        stage('Archive build artifacts') {
             steps {
-                echo 'Archiving dist/orderflow-cloud-frontend...'
+                // Store the built Angular files as Jenkins artifacts
                 archiveArtifacts artifacts: 'dist/orderflow-cloud-frontend/**', fingerprint: true
             }
-        }
-    }
-
-    post {
-        always {
-            junit 'coverage/**/*.xml' // optional, only if you later add JUnit-style reports
-        }
-        success {
-            echo 'Frontend pipeline completed successfully.'
-        }
-        failure {
-            echo 'Frontend pipeline FAILED. Please check the console output.'
         }
     }
 }
