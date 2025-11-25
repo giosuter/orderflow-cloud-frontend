@@ -7,14 +7,15 @@
 # Angular outputPath (angular.json):
 #   dist/orderflow-cloud-frontend/browser
 #
-# We DEPLOY that build into:
-#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/browser
+# We COPY ONLY THE CONTENTS of that local browser/ folder to:
+#   /home/zitatusi/www/devprojects.ch/orderflow-cloud
 #
-# So the effective document root on Hostpoint is:
-#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/browser
-#
-# URL in the browser stays:
-#   https://devprojects.ch/orderflow-cloud/
+# Result on Hostpoint:
+#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/index.html
+#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/main-*.js
+#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/polyfills-*.js
+#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/styles-*.css
+#   ... (NO `browser` directory on the server)
 # =====================================================================
 
 set -euo pipefail
@@ -25,7 +26,7 @@ LOCAL_PROJECT_ROOT="$SCRIPT_DIR"
 
 echo ">>> Project root (SCRIPT_DIR): $LOCAL_PROJECT_ROOT"
 
-# This MUST match angular.json -> outputPath
+# MUST match angular.json -> outputPath
 LOCAL_BUILD_DIR="$LOCAL_PROJECT_ROOT/dist/orderflow-cloud-frontend/browser"
 
 # --------- REMOTE CONFIG ----------------------------------------------
@@ -33,8 +34,8 @@ REMOTE_HOST="zitatusi@zitatusi.myhostpoint.ch"
 REMOTE_WEB_ROOT="/home/zitatusi/www/devprojects.ch"
 
 # IMPORTANT:
-# We now DEPLOY INTO the 'browser' directory on the server.
-REMOTE_APP_DIR="$REMOTE_WEB_ROOT/orderflow-cloud/browser"
+# Remote *document root* for the Angular app (NO 'browser' here)
+REMOTE_APP_DIR="$REMOTE_WEB_ROOT/orderflow-cloud"
 
 # --------- BUILD + DEPLOY ---------------------------------------------
 echo ">>> [1/4] Running frontend tests (npm test)..."
@@ -50,24 +51,28 @@ if [ ! -d "$LOCAL_BUILD_DIR" ]; then
   exit 1
 fi
 
-echo ">>> [3/4] Ensuring remote target directory exists: $REMOTE_APP_DIR"
-ssh "$REMOTE_HOST" "mkdir -p '$REMOTE_APP_DIR'"
+echo ">>> [3/4] Preparing remote target directory: $REMOTE_APP_DIR"
+ssh "$REMOTE_HOST" "
+  mkdir -p '$REMOTE_APP_DIR' &&
+  # Remove any old nested 'browser' directory if it exists
+  rm -rf '$REMOTE_APP_DIR/browser'
+"
 
-echo ">>> [4/4] Deploying build artifacts via rsync to Hostpoint..."
+echo ">>> [4/4] Deploying *contents* of local browser/ to Hostpoint..."
 echo "     Source (local):  $LOCAL_BUILD_DIR/"
 echo "     Target (remote): $REMOTE_APP_DIR/"
 
-# Trailing slash = copy CONTENTS of local browser/ into remote browser/
+# Trailing slash on LOCAL_BUILD_DIR = copy CONTENTS of browser/, not browser dir itself
 rsync -avz --delete \
-  "$LOCAL_BUILD_DIR"/ \
-  "$REMOTE_HOST:$REMOTE_APP_DIR"/
+  \"$LOCAL_BUILD_DIR\"/ \
+  \"$REMOTE_HOST:$REMOTE_APP_DIR\"/
 
-echo "==================================================================="
-echo "Deployment finished."
+echo \"===================================================================\"
+echo \"Deployment finished.\"
 echo
-echo "Angular build is now deployed to:"
-echo "  $REMOTE_APP_DIR"
+echo \"Angular build is now deployed to:\"
+echo \"  $REMOTE_APP_DIR\"
 echo
-echo "You should reach it at:"
-echo "  https://devprojects.ch/orderflow-cloud/"
-echo "==================================================================="
+echo \"You should reach it at:\"
+echo \"  https://devprojects.ch/orderflow-cloud/\"
+echo \"===================================================================\"
