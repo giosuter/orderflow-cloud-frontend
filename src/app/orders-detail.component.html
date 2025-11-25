@@ -1,0 +1,80 @@
+<div class="order-detail-page">
+  <header class="order-detail-header">
+    <div>
+      <h1 *ngIf="order; else noTitle">
+        Order {{ order.code }}
+      </h1>
+      <ng-template #noTitle>
+        <h1>Order details</h1>
+      </ng-template>
+
+      <p class="subtitle">Order details</p>
+    </div>
+
+    <a class="btn" routerLink="/orders">
+      ← Back to orders
+    </a>
+  </header>
+
+  <div *ngIf="loading" class="loading-text">
+    Loading order…
+  </div>
+
+  <div *ngIf="!loading && error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <section *ngIf="!loading && !error && order" class="order-detail-body">
+    <div class="detail-grid">
+      <div class="detail-row">
+        <div class="label">ID</div>
+        <div class="value">{{ order.id }}</div>
+      </div>
+
+      <div class="detail-row">
+        <div class="label">Code</div>
+        <div class="value">{{ order.code }}</div>
+      </div>
+
+      <div class="detail-row">
+        <div class="label">Status</div>
+        <div class="value">
+          <span
+            class="status-pill"
+            [ngClass]="getStatusClass(order.status)"
+          >
+            {{ order.status || 'UNKNOWN' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <div class="label">Customer</div>
+        <div class="value">
+          {{ order.customerName || '—' }}
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <div class="label">Total</div>
+        <div class="value">
+          {{ order.total | number: '1.2-2' }}
+        </div>
+      </div>
+
+      <div class="detail-row" *ngIf="order.createdAt">
+        <div class="label">Created at</div>
+        <div class="value">
+          {{ order.createdAt | date: 'short' }}
+        </div>
+      </div>
+
+      <div class="detail-row" *ngIf="order.updatedAt">
+        <div class="label">Updated at</div>
+        <div class="value">
+          {{ order.updatedAt | date: 'short' }}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

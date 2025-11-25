@@ -1,12 +1,14 @@
-.detail-page {
+.order-detail-page {
   max-width: 800px;
   margin: 0 auto;
   padding: 1.5rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #222;
 }
 
-.detail-header {
+.order-detail-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
@@ -18,13 +20,13 @@
   }
 
   .subtitle {
-    margin: 0.25rem 0 0;
+    margin: 0.2rem 0 0;
     font-size: 0.95rem;
     color: #555;
   }
 }
 
-/* Re-use simple button styling from orders list */
+/* Simple button styling, same style as list */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -36,43 +38,20 @@
   cursor: pointer;
   background-color: #e0e0e0;
   color: #222;
+  text-decoration: none;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
 
-  &:disabled {
-    opacity: 0.6;
-    cursor: default;
+  &:hover {
+    background-color: #d5d5d5;
+  }
+
+  &:active {
+    background-color: #c2c2c2;
   }
 }
 
-.detail-card {
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
-  padding: 1rem 1.25rem;
-  background-color: #fafafa;
-}
+/* Alerts */
 
-.detail-row {
-  display: flex;
-  padding: 0.35rem 0;
-  font-size: 0.95rem;
-
-  .label {
-    width: 140px;
-    font-weight: 600;
-    color: #444;
-  }
-
-  .value {
-    flex: 1;
-  }
-}
-
-/* Simple info text */
-.info-text {
-  font-size: 0.95rem;
-}
-
-/* Error alert (reuse colors) */
 .alert {
   padding: 0.75rem 1rem;
   border-radius: 4px;
@@ -86,7 +65,42 @@
   color: #c62828;
 }
 
-/* Status pill (use same classes as in list) */
+.loading-text {
+  font-size: 0.95rem;
+}
+
+/* Detail layout */
+
+.order-detail-body {
+  margin-top: 1rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #eee;
+
+  .label {
+    width: 140px;
+    font-weight: 600;
+    color: #555;
+  }
+
+  .value {
+    flex: 1;
+  }
+}
+
+/* Status pill – same style family as list */
+
 .status-pill {
   display: inline-block;
   padding: 0.15rem 0.55rem;
@@ -103,7 +117,8 @@
 }
 
 .status_COMPLETED,
-.status_DONE {
+.status_DONE,
+.status_PAID {
   background-color: #e8f5e9;
   color: #1b5e20;
 }
