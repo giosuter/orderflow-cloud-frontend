@@ -1,17 +1,77 @@
 <div class="order-detail-page">
-  <h1>Order Details</h1>
+  <header class="order-detail-header">
+    <div>
+      <h1>Order details</h1>
+      <p class="subtitle">View the full information for this order.</p>
+    </div>
 
-  <div *ngIf="loading">Loading…</div>
+    <div class="header-actions">
+      <button type="button" class="btn" [routerLink]="['/orders']">
+        ← Back to list
+      </button>
 
-  <div *ngIf="error" class="alert-error">{{ error }}</div>
+      <button
+        *ngIf="order"
+        type="button"
+        class="btn btn-primary"
+        [routerLink]="['/orders', order.id, 'edit']"
+      >
+        Edit order
+      </button>
+    </div>
+  </header>
 
-  <div *ngIf="!loading && order">
-    <p><strong>ID:</strong> {{ order.id }}</p>
-    <p><strong>Code:</strong> {{ order.code }}</p>
-    <p><strong>Status:</strong> {{ order.status }}</p>
-    <p><strong>Customer:</strong> {{ order.customerName }}</p>
-    <p><strong>Total:</strong> {{ order.total | number: '1.2-2' }}</p>
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
 
-    <button class="btn" [routerLink]="['/orders']">Back to list</button>
+  <div *ngIf="loading" class="loading-text">
+    Loading order…
+  </div>
+
+  <div *ngIf="!loading && order" class="order-detail-card">
+    <dl>
+      <div class="detail-row">
+        <dt>ID</dt>
+        <dd>{{ order.id }}</dd>
+      </div>
+
+      <div class="detail-row">
+        <dt>Code</dt>
+        <dd>{{ order.code }}</dd>
+      </div>
+
+      <div class="detail-row">
+        <dt>Status</dt>
+        <dd>
+          <span
+            class="status-pill"
+            [ngClass]="'status_' + (order.status || 'UNKNOWN')"
+          >
+            {{ order.status || 'UNKNOWN' }}
+          </span>
+        </dd>
+      </div>
+
+      <div class="detail-row">
+        <dt>Customer</dt>
+        <dd>{{ order.customerName || '—' }}</dd>
+      </div>
+
+      <div class="detail-row">
+        <dt>Total</dt>
+        <dd>{{ order.total | number: '1.2-2' }}</dd>
+      </div>
+
+      <div class="detail-row">
+        <dt>Created at</dt>
+        <dd>{{ order.createdAt || '—' }}</dd>
+      </div>
+
+      <div class="detail-row">
+        <dt>Updated at</dt>
+        <dd>{{ order.updatedAt || '—' }}</dd>
+      </div>
+    </dl>
   </div>
 </div>

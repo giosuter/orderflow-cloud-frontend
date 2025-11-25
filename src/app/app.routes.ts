@@ -2,14 +2,16 @@ import { Routes } from '@angular/router';
 import { OrdersListComponent } from './orders-list.component';
 import { OrderDetailComponent } from './order-detail.component';
 import { OrderNewComponent } from './order-new.component';
+import { OrderEditComponent } from './order-edit.component';
 
 /**
  * Application routes for OrderFlow Cloud frontend.
  *
- * /orders         -> list of orders
- * /orders/new     -> create new order
- * /orders/:id     -> order detail view
- * /               -> redirect to /orders
+ * /orders           -> list of orders
+ * /orders/new       -> create new order
+ * /orders/:id/edit  -> edit existing order
+ * /orders/:id       -> order detail view
+ * /                 -> redirect to /orders
  */
 export const routes: Routes = [
   {
@@ -19,6 +21,10 @@ export const routes: Routes = [
   {
     path: 'orders/new',
     component: OrderNewComponent,
+  },
+  {
+    path: 'orders/:id/edit',
+    component: OrderEditComponent,
   },
   {
     path: 'orders/:id',

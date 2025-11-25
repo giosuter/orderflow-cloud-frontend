@@ -1,0 +1,92 @@
+<div class="order-edit-page">
+  <header class="order-edit-header">
+    <div>
+      <h1>Edit order</h1>
+      <p class="subtitle">Update the details of the existing order.</p>
+    </div>
+
+    <button type="button" class="btn" [routerLink]="['/orders', orderId]">
+      ← Back to details
+    </button>
+  </header>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading-text">
+    Loading order…
+  </div>
+
+  <form
+    *ngIf="!loading"
+    (ngSubmit)="onSubmit()"
+    #editForm="ngForm"
+    class="order-form"
+  >
+    <!-- Code -->
+    <div class="form-row">
+      <label for="code">Code</label>
+      <input
+        id="code"
+        name="code"
+        type="text"
+        [(ngModel)]="draft.code"
+        required
+      />
+    </div>
+
+    <!-- Status -->
+    <div class="form-row">
+      <label for="status">Status</label>
+      <select
+        id="status"
+        name="status"
+        [(ngModel)]="draft.status"
+      >
+        <option [ngValue]="''">(none)</option>
+        <option *ngFor="let s of statusOptions" [ngValue]="s" [disabled]="s === ''">
+          {{ s }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Customer name -->
+    <div class="form-row">
+      <label for="customerName">Customer</label>
+      <input
+        id="customerName"
+        name="customerName"
+        type="text"
+        [(ngModel)]="draft.customerName"
+        required
+      />
+    </div>
+
+    <!-- Total -->
+    <div class="form-row">
+      <label for="total">Total</label>
+      <input
+        id="total"
+        name="total"
+        type="number"
+        step="0.01"
+        [(ngModel)]="draft.total"
+      />
+    </div>
+
+    <div class="form-actions">
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="saving || editForm.invalid"
+      >
+        {{ saving ? 'Saving…' : 'Save changes' }}
+      </button>
+
+      <button type="button" class="btn" (click)="onCancel()" [disabled]="saving">
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>

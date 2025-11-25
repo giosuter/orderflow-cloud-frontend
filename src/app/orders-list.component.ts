@@ -1,48 +1,32 @@
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-
-import { OrderService } from './order.service';
 import { Order, OrderStatus } from './order.model';
+import { OrderService } from './order.service';
 
-/**
- * OrdersListComponent
- *
- * Displays a table of orders with:
- *  - loading & error messages
- *  - filter by code and status
- *  - link to a detail page (/orders/:id)
- */
 @Component({
-  standalone: true,
   selector: 'app-orders-list',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './orders-list.component.html',
   styleUrls: ['./orders-list.component.scss'],
 })
-export class OrdersListComponent implements OnInit {
-  // Raw list from backend
+export class OrdersListComponent {
   orders: Order[] = [];
-
-  // Filtered list for display
   filteredOrders: Order[] = [];
 
-  // UI state
   loading = false;
   error: string | null = null;
 
-  // Filter model
+  // Text filter
   filterCode = '';
-  filterStatus: OrderStatus | '' = '';
 
-  // Available status options (adapt to your actual enum values)
-  statusOptions: OrderStatus[] = [
-    'NEW' as OrderStatus,
-    'OPEN' as OrderStatus,
-    'COMPLETED' as OrderStatus,
-    'CANCELLED' as OrderStatus,
-  ];
+  // IMPORTANT: default = null -> "All" is selected
+  filterStatus: OrderStatus | null = null;
+
+  // Available statuses for the dropdown (adapt to your real enum)
+  statusOptions: OrderStatus[] = ['NEW', 'PAID', 'CANCELLED'];
 
   constructor(private readonly orderService: OrderService) {}
 
@@ -50,49 +34,36 @@ export class OrdersListComponent implements OnInit {
     this.loadOrders();
   }
 
-  /**
-   * Load all orders from backend via OrderService.
-   */
-  private loadOrders(): void {
+  loadOrders(): void {
     this.loading = true;
     this.error = null;
 
     this.orderService.getAll().subscribe({
       next: (orders) => {
         this.orders = orders ?? [];
+        // initial filter: show everything
         this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
         console.error('Failed to load orders', err);
-        this.error = 'Failed to load orders.';
-        this.orders = [];
-        this.filteredOrders = [];
+        this.error = 'Failed to load orders';
         this.loading = false;
       },
     });
   }
 
-  /**
-   * Apply filterCode + filterStatus to orders array
-   * and update filteredOrders.
-   */
   applyFilters(): void {
     const codeFilter = this.filterCode.trim().toLowerCase();
     const statusFilter = this.filterStatus;
 
     this.filteredOrders = this.orders.filter((order) => {
-      let matchesCode = true;
-      let matchesStatus = true;
+      const matchesCode =
+        !codeFilter ||
+        (order.code ?? '').toLowerCase().includes(codeFilter);
 
-      if (codeFilter) {
-        const code = (order.code ?? '').toLowerCase();
-        matchesCode = code.includes(codeFilter);
-      }
-
-      if (statusFilter) {
-        matchesStatus = order.status === statusFilter;
-      }
+      const matchesStatus =
+        statusFilter == null || order.status === statusFilter;
 
       return matchesCode && matchesStatus;
     });
