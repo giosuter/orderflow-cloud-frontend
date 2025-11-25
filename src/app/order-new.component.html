@@ -1,12 +1,12 @@
-<div class="new-order-page">
-  <header class="new-order-header">
+<div class="order-new-page">
+  <header class="order-new-header">
     <div>
       <h1>New order</h1>
       <p class="subtitle">Create a new order in OrderFlow Cloud</p>
     </div>
 
     <button type="button" class="btn" (click)="onCancel()">
-      Orders
+      ← Back to orders
     </button>
   </header>
 
@@ -14,31 +14,43 @@
     {{ error }}
   </div>
 
-  <form class="new-order-form" (ngSubmit)="onSubmit()">
+  <form (ngSubmit)="onSubmit()" #orderForm="ngForm" class="order-form">
+    <!-- Code -->
     <div class="form-row">
       <label for="code">Code *</label>
       <input
         id="code"
-        type="text"
-        [(ngModel)]="draft.code"
         name="code"
+        type="text"
         required
-        placeholder="e.g. ORD-2025-001"
+        [(ngModel)]="draft.code"
+        #codeCtrl="ngModel"
       />
+      <div class="field-error" *ngIf="codeCtrl.invalid && codeCtrl.touched">
+        Code is required.
+      </div>
     </div>
 
+    <!-- Customer name -->
     <div class="form-row">
-      <label for="customerName">Customer *</label>
+      <label for="customerName">Customer name *</label>
       <input
         id="customerName"
-        type="text"
-        [(ngModel)]="draft.customerName"
         name="customerName"
+        type="text"
         required
-        placeholder="Customer name"
+        [(ngModel)]="draft.customerName"
+        #customerCtrl="ngModel"
       />
+      <div
+        class="field-error"
+        *ngIf="customerCtrl.invalid && customerCtrl.touched"
+      >
+        Customer name is required.
+      </div>
     </div>
 
+    <!-- Status -->
     <div class="form-row">
       <label for="status">Status</label>
       <select
@@ -46,32 +58,34 @@
         name="status"
         [(ngModel)]="draft.status"
       >
-        <option [ngValue]="''">Select status…</option>
+        <option [ngValue]="null">-- Select status --</option>
         <option *ngFor="let s of statusOptions" [ngValue]="s">
-          {{ s || '—' }}
+          {{ s }}
         </option>
       </select>
     </div>
 
+    <!-- Total -->
     <div class="form-row">
-      <label for="total">Total</label>
+      <label for="total">Total amount</label>
       <input
         id="total"
-        type="number"
         name="total"
-        [(ngModel)]="draft.total"
-        step="0.01"
+        type="number"
         min="0"
+        step="0.01"
+        [(ngModel)]="draft.total"
       />
     </div>
 
+    <!-- Form actions -->
     <div class="form-actions">
       <button
         type="submit"
         class="btn btn-primary"
-        [disabled]="saving"
+        [disabled]="saving || orderForm.invalid"
       >
-        {{ saving ? 'Saving…' : 'Create order' }}
+        {{ saving ? 'Saving…' : 'Save' }}
       </button>
 
       <button

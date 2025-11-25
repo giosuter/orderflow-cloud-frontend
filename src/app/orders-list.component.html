@@ -5,11 +5,11 @@
       <p class="subtitle">Order management frontend</p>
     </div>
 
-    <!-- + New order now navigates to /orders/new -->
+    <!-- Now active: go to /orders/new -->
     <button
       type="button"
       class="btn btn-primary"
-      [routerLink]="['/orders', 'new']"
+      [routerLink]="['/orders/new']"
     >
       + New order
     </button>
@@ -35,7 +35,7 @@
       [(ngModel)]="filterStatus"
       (ngModelChange)="applyFilters()"
     >
-      <option value="">All</option>
+      <option [ngValue]="null">All</option>
       <option *ngFor="let s of statusOptions" [ngValue]="s">
         {{ s }}
       </option>

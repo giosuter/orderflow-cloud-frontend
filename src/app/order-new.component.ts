@@ -2,8 +2,23 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { Order, OrderStatus } from './order.model';
+import { OrderStatus } from './order.model';
 import { OrderService } from './order.service';
+
+/**
+ * NewOrderDraft
+ *
+ * Internal type for the "create new order" form.
+ * Matches the shape expected by OrderService.create(...),
+ * but with a simple status field that allows "" (no selection yet)
+ * or a real OrderStatus.
+ */
+type NewOrderDraft = {
+  code: string;
+  status: '' | OrderStatus;
+  customerName: string;
+  total: number;
+};
 
 /**
  * OrderNewComponent
@@ -19,21 +34,8 @@ import { OrderService } from './order.service';
   styleUrls: ['./order-new.component.scss'],
 })
 export class OrderNewComponent {
-  /**
-   * Local draft model for the form.
-   *
-   * We deliberately allow `status` to be either:
-   *  - an actual OrderStatus value, or
-   *  - '' (empty string) meaning "no status selected yet".
-   *
-   * Before sending to the backend we normalize '' -> undefined.
-   */
-  draft: {
-    code: string;
-    status: OrderStatus | '';
-    customerName: string;
-    total: number;
-  } = {
+  // Form model
+  draft: NewOrderDraft = {
     code: '',
     status: '',
     customerName: '',
@@ -43,9 +45,8 @@ export class OrderNewComponent {
   saving = false;
   error: string | null = null;
 
-  // Reuse the same status options as the list, adapt to your real enum/union values
-  // NOTE: these are plain string literals compatible with the OrderStatus type.
-  statusOptions: (OrderStatus | '')[] = ['', 'NEW', 'PAID', 'CANCELLED'];
+  // Status options for the dropdown
+  statusOptions: Array<'' | OrderStatus> = ['', 'NEW', 'PAID', 'CANCELLED'];
 
   constructor(
     private readonly orderService: OrderService,
@@ -61,22 +62,25 @@ export class OrderNewComponent {
     this.saving = true;
     this.error = null;
 
-    // Normalize '' -> undefined so it matches Order.status?: OrderStatus
-    const normalizedStatus: OrderStatus | undefined =
-      this.draft.status === '' ? undefined : this.draft.status;
-
-    // Build payload exactly matching Omit<Order, 'id' | 'createdAt' | 'updatedAt'>
-    const payload: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
+    // Build payload for the service (omit empty status)
+    const payload: {
+      code: string;
+      status?: OrderStatus;
+      customerName: string;
+      total: number;
+    } = {
       code: this.draft.code,
       customerName: this.draft.customerName,
       total: this.draft.total,
-      status: normalizedStatus,
     };
+
+    if (this.draft.status !== '') {
+      payload.status = this.draft.status;
+    }
 
     this.orderService.create(payload).subscribe({
       next: () => {
         this.saving = false;
-        // After successful creation, go back to the orders list
         this.router.navigate(['/orders']);
       },
       error: (err) => {
