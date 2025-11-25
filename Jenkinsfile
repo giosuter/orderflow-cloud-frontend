@@ -1,56 +1,69 @@
+// Jenkinsfile (frontend CI + CD for OrderFlow Cloud)
+//
+// Pipeline goals:
+//  - Clone orderflow-cloud-frontend repo
+//  - Install Node dependencies with `npm ci`
+//  - Run Angular unit tests in HEADLESS Firefox
+//  - Build Angular app for production (base href /orderflow-cloud/)
+//  - Archive dist/ as build artifact
+//  - Deploy to Hostpoint by calling deploy_orderflow_frontend_prod.sh
+//
+// Notes / Assumptions:
+//  - Jenkins has Node.js + npm installed and available on PATH.
+//  - Jenkins has Firefox installed (headless OK).
+//  - Workspace is a clean clone of the GitHub repo.
+
 pipeline {
     agent any
 
     environment {
-        // ✓ CORRECT: Jenkins finds npm and node from NVM
+        // Make sure Jenkins can find `node` and `npm` from NVM
         PATH = "/Users/giovannisuter/.nvm/versions/node/v22.20.0/bin:${PATH}"
     }
 
     options {
-        timestamps()      // ✓ make logs time-stamped
-        ansiColor('xterm') // ✓ color output
+        timestamps()
+        ansiColor('xterm')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm   // ✓ correct
+                checkout scm
             }
         }
 
         stage('Install dependencies') {
             steps {
-                sh 'npm ci'    // ✓ correct: CI-friendly + fast
+                sh 'npm ci'
             }
         }
 
         stage('Run unit tests') {
             steps {
-                // ✓ correct: overrides the default browser and singleRun
+                // Headless in CI
                 sh 'npm test -- --watch=false --browsers FirefoxHeadless'
             }
         }
 
         stage('Build production bundle') {
             steps {
-                // ✓ correct Angular build
                 sh 'npm run build -- --configuration production --base-href /orderflow-cloud/'
             }
         }
 
         stage('Archive build artifacts') {
             steps {
-                // ✓ perfectly correct artifact path
                 archiveArtifacts artifacts: 'dist/orderflow-cloud-frontend/**', fingerprint: true
             }
         }
 
         stage('Deploy to Hostpoint') {
-            when {
-                branch 'main'     // ✓ only deploy from main
-            }
+            // IMPORTANT: no "when { branch 'main' }" here, so it always runs
             steps {
-                // ✓ correct usage of your deploy script
+                echo "Running deploy_orderflow_frontend_prod.sh from Jenkins workspace..."
+                sh 'pwd'
+                sh 'ls -ltra'
                 sh 'chmod +x ./deploy_orderflow_frontend_prod.sh'
                 sh './deploy_orderflow_frontend_prod.sh'
             }
