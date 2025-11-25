@@ -4,11 +4,11 @@
 #
 # Build and deploy the OrderFlow Cloud Angular frontend to Hostpoint.
 #
-# Local project root:
-#   /Users/giovannisuter/dev/projects/orderflow-cloud/front-end/orderflow-cloud-frontend
+# This script is designed to work both:
+#  - when run manually from your local dev project
+#  - when run by Jenkins from its workspace
 #
-# Remote web root:
-#   /home/zitatusi/www/devprojects.ch
+# It always uses *the directory where this script lives* as the project root.
 #
 # Final production URL:
 #   https://devprojects.ch/orderflow-cloud/
@@ -20,16 +20,22 @@
 
 set -euo pipefail
 
-# --------- CONFIG -----------------------------------------------------
+# --------- PROJECT ROOT DETECTION -------------------------------------
+# Resolve the directory where this script is located, even if called via symlink
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-LOCAL_PROJECT_ROOT="/Users/giovannisuter/dev/projects/orderflow-cloud/front-end/orderflow-cloud-frontend"
-LOCAL_BUILD_DIR="$LOCAL_PROJECT_ROOT/dist/orderflow-cloud-frontend/browser"
+# Use the script directory as the project root
+LOCAL_PROJECT_ROOT="$SCRIPT_DIR"
+LOCAL_BUILD_DIR="$LOCAL_PROJECT_ROOT/dist/orderflow-cloud-frontend"
+
+# --------- REMOTE CONFIG ----------------------------------------------
 
 REMOTE_HOST="zitatusi@zitatusi.myhostpoint.ch"
 REMOTE_WEB_ROOT="/home/zitatusi/www/devprojects.ch"
 REMOTE_APP_DIR="$REMOTE_WEB_ROOT/orderflow-cloud"
 
-# ---------------------------------------------------------------------
+# ----------------------------------------------------------------------
+echo ">>> [1/4] Project root: $LOCAL_PROJECT_ROOT"
 echo ">>> [1/4] Running frontend tests (npm test)..."
 cd "$LOCAL_PROJECT_ROOT"
 npm test -- --watch=false
