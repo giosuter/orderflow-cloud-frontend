@@ -1,5 +1,5 @@
 .order-detail-page {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 1.5rem;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -20,13 +20,14 @@
   }
 
   .subtitle {
-    margin: 0.2rem 0 0;
+    margin: 0.25rem 0 0;
     font-size: 0.95rem;
     color: #555;
   }
 }
 
-/* Simple button styling, same style as list */
+/* Reuse same button styling concept as list */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -38,7 +39,6 @@
   cursor: pointer;
   background-color: #e0e0e0;
   color: #222;
-  text-decoration: none;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
@@ -47,6 +47,11 @@
 
   &:active {
     background-color: #c2c2c2;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 }
 
@@ -65,41 +70,48 @@
   color: #c62828;
 }
 
-.loading-text {
+.loading-text,
+.empty-text {
   font-size: 0.95rem;
+  margin-top: 0.5rem;
 }
 
-/* Detail layout */
+/* Card layout */
 
-.order-detail-body {
-  margin-top: 1rem;
+.order-card {
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  background-color: #fff;
+  padding: 1.25rem;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.detail-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  row-gap: 0.5rem;
-}
-
-.detail-row {
+.order-card-header {
   display: flex;
-  align-items: baseline;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 1rem;
-  padding: 0.4rem 0;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 1rem;
 
-  .label {
-    width: 140px;
+  .order-code {
+    font-size: 1.2rem;
     font-weight: 600;
-    color: #555;
   }
 
-  .value {
-    flex: 1;
+  .order-id {
+    font-size: 0.9rem;
+    color: #666;
   }
 }
 
-/* Status pill – same style family as list */
+.order-status-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* Status pill: same pattern as in list */
 
 .status-pill {
   display: inline-block;
@@ -116,9 +128,9 @@
   color: #0d47a1;
 }
 
+.status_PAID,
 .status_COMPLETED,
-.status_DONE,
-.status_PAID {
+.status_DONE {
   background-color: #e8f5e9;
   color: #1b5e20;
 }
@@ -132,4 +144,33 @@
 .status_UNKNOWN {
   background-color: #f5f5f5;
   color: #555;
+}
+
+/* Details table (definition list) */
+
+.order-properties {
+  margin: 0;
+
+  .row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    dt {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+  }
 }

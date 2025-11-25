@@ -1,80 +1,76 @@
 <div class="order-detail-page">
   <header class="order-detail-header">
     <div>
-      <h1 *ngIf="order; else noTitle">
-        Order {{ order.code }}
-      </h1>
-      <ng-template #noTitle>
-        <h1>Order details</h1>
-      </ng-template>
-
-      <p class="subtitle">Order details</p>
+      <h1>Order details</h1>
+      <p class="subtitle">
+        Read-only view of a single order
+      </p>
     </div>
 
-    <a class="btn" routerLink="/orders">
+    <button type="button" class="btn" (click)="backToList()">
       ← Back to orders
-    </a>
+    </button>
   </header>
 
+  <!-- Error message -->
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <!-- Loading indicator -->
   <div *ngIf="loading" class="loading-text">
     Loading order…
   </div>
 
-  <div *ngIf="!loading && error" class="alert alert-error">
-    {{ error }}
+  <!-- Empty state if no order and not loading and no error -->
+  <div *ngIf="!loading && !error && !order" class="empty-text">
+    Order not found.
   </div>
 
-  <section *ngIf="!loading && !error && order" class="order-detail-body">
-    <div class="detail-grid">
-      <div class="detail-row">
-        <div class="label">ID</div>
-        <div class="value">{{ order.id }}</div>
-      </div>
-
-      <div class="detail-row">
-        <div class="label">Code</div>
-        <div class="value">{{ order.code }}</div>
-      </div>
-
-      <div class="detail-row">
-        <div class="label">Status</div>
-        <div class="value">
-          <span
-            class="status-pill"
-            [ngClass]="getStatusClass(order.status)"
-          >
-            {{ order.status || 'UNKNOWN' }}
-          </span>
+  <!-- Actual order details -->
+  <section *ngIf="!loading && order" class="order-card">
+    <div class="order-card-header">
+      <div>
+        <div class="order-code">
+          {{ order.code }}
+        </div>
+        <div class="order-id">
+          ID: {{ order.id }}
         </div>
       </div>
 
-      <div class="detail-row">
-        <div class="label">Customer</div>
-        <div class="value">
-          {{ order.customerName || '—' }}
-        </div>
+      <div class="order-status-wrapper">
+        <span
+          class="status-pill"
+          [ngClass]="'status_' + (order.status || 'UNKNOWN')"
+        >
+          {{ order.status || 'UNKNOWN' }}
+        </span>
       </div>
+    </div>
 
-      <div class="detail-row">
-        <div class="label">Total</div>
-        <div class="value">
-          {{ order.total | number: '1.2-2' }}
+    <div class="order-card-body">
+      <dl class="order-properties">
+        <div class="row">
+          <dt>Customer</dt>
+          <dd>{{ order.customerName }}</dd>
         </div>
-      </div>
 
-      <div class="detail-row" *ngIf="order.createdAt">
-        <div class="label">Created at</div>
-        <div class="value">
-          {{ order.createdAt | date: 'short' }}
+        <div class="row">
+          <dt>Total</dt>
+          <dd>{{ order.total | number: '1.2-2' }}</dd>
         </div>
-      </div>
 
-      <div class="detail-row" *ngIf="order.updatedAt">
-        <div class="label">Updated at</div>
-        <div class="value">
-          {{ order.updatedAt | date: 'short' }}
+        <div class="row">
+          <dt>Created at</dt>
+          <dd>{{ order.createdAt | date: 'yyyy-MM-dd HH:mm' }}</dd>
         </div>
-      </div>
+
+        <div class="row">
+          <dt>Updated at</dt>
+          <dd>{{ order.updatedAt | date: 'yyyy-MM-dd HH:mm' }}</dd>
+        </div>
+      </dl>
     </div>
   </section>
 </div>

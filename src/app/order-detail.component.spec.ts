@@ -1,54 +1,58 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { of, throwError } from 'rxjs';
 
 import { OrderDetailComponent } from './order-detail.component';
 import { OrderService } from './order.service';
 import { Order } from './order.model';
 
-/**
- * Simple unit tests for OrdersDetailComponent:
- *  - loads an order by id from route param
- *  - sets loading / error / order fields correctly
- */
-
-class MockOrderService {
-  getById = jasmine.createSpy('getById');
-}
-
-describe('OrdersDetailComponent', () => {
-  let component: OrderDetailComponent;
+describe('OrderDetailComponent', () => {
   let fixture: ComponentFixture<OrderDetailComponent>;
-  let mockService: MockOrderService;
+  let component: OrderDetailComponent;
+
+  let orderServiceSpy: jasmine.SpyObj<OrderService>;
+  let activatedRouteStub: Partial<ActivatedRoute>;
 
   beforeEach(async () => {
-    mockService = new MockOrderService();
+    // Spy for OrderService
+    orderServiceSpy = jasmine.createSpyObj('OrderService', ['getById']);
+
+    // Simple stub for ActivatedRoute with a fixed :id = "1"
+    activatedRouteStub = {
+      paramMap: of(convertToParamMap({ id: '1' })),
+    };
 
     await TestBed.configureTestingModule({
+      // Standalone component goes into imports
       imports: [OrderDetailComponent],
       providers: [
-        {
-          provide: OrderService,
-          useValue: mockService,
-        },
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              paramMap: convertToParamMap({ id: '1' }),
-            },
-          },
-        },
+        { provide: OrderService, useValue: orderServiceSpy },
+        { provide: ActivatedRoute, useValue: activatedRouteStub },
       ],
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(OrderDetailComponent);
     component = fixture.componentInstance;
   });
 
   it('should create', () => {
+    // Arrange
+    const mockOrder: Order = {
+      id: 1,
+      code: 'ORD-1',
+      status: 'NEW',
+      customerName: 'Alice',
+      total: 100,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    orderServiceSpy.getById.and.returnValue(of(mockOrder));
+
+    // Act: triggers ngOnInit (which subscribes to paramMap and loads order)
+    fixture.detectChanges();
+
+    // Assert
     expect(component).toBeTruthy();
   });
 
@@ -58,29 +62,32 @@ describe('OrdersDetailComponent', () => {
       code: 'ORD-1',
       status: 'NEW',
       customerName: 'Alice',
-      total: 99.5,
-      createdAt: undefined,
-      updatedAt: undefined,
+      total: 100,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
-    mockService.getById.and.returnValue(of(mockOrder));
+    orderServiceSpy.getById.and.returnValue(of(mockOrder));
 
-    component.ngOnInit();
+    // ngOnInit + subscribe to paramMap + call getById
+    fixture.detectChanges();
 
-    expect(mockService.getById).toHaveBeenCalledWith(1);
-    expect(component.loading).toBeFalse();
-    expect(component.error).toBeNull();
+    expect(orderServiceSpy.getById).toHaveBeenCalledWith(1);
     expect(component.order).toEqual(mockOrder);
+    expect(component.error).toBeNull();
+    expect(component.loading).toBeFalse();
   });
 
   it('should set error when backend call fails', () => {
-    mockService.getById.and.returnValue(throwError(() => new Error('Boom')));
+    orderServiceSpy.getById.and.returnValue(
+      throwError(() => new Error('Boom')),
+    );
 
-    component.ngOnInit();
+    fixture.detectChanges();
 
-    expect(mockService.getById).toHaveBeenCalledWith(1);
-    expect(component.loading).toBeFalse();
+    expect(orderServiceSpy.getById).toHaveBeenCalledWith(1);
     expect(component.order).toBeNull();
-    expect(component.error).toBe('Failed to load order.');
+    expect(component.error).toBeTruthy();
+    expect(component.loading).toBeFalse();
   });
 });

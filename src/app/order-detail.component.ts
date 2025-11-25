@@ -1,46 +1,67 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { RouterModule } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 import { Order } from './order.model';
 import { OrderService } from './order.service';
 
 /**
- * OrdersDetailComponent
+ * OrderDetailComponent
  *
- * Shows details of a single Order, loaded from the backend by its ID.
- * URL pattern: /orders/:id
+ * Shows the details of a single Order, loaded from the backend via OrderService.
+ * URL: /orders/:id
  */
 @Component({
-  selector: 'app-orders-detail',
+  selector: 'app-order-detail',
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './order-detail.component.html',
   styleUrls: ['./order-detail.component.scss'],
 })
-export class OrderDetailComponent implements OnInit {
+export class OrderDetailComponent implements OnInit, OnDestroy {
   order: Order | null = null;
   loading = false;
   error: string | null = null;
 
+  private routeSub: Subscription | null = null;
+
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly orderService: OrderService
+    private readonly router: Router,
+    private readonly orderService: OrderService,
   ) {}
 
   ngOnInit(): void {
     this.loading = true;
     this.error = null;
 
-    const idParam = this.route.snapshot.paramMap.get('id');
-    const id = idParam ? Number(idParam) : NaN;
+    // Subscribe to :id route parameter
+    this.routeSub = this.route.paramMap.subscribe((params) => {
+      const idParam = params.get('id');
 
-    if (!id || Number.isNaN(id)) {
-      this.loading = false;
-      this.error = 'Invalid order id.';
-      return;
-    }
+      if (!idParam) {
+        this.error = 'No order id provided in URL.';
+        this.loading = false;
+        return;
+      }
+
+      const id = Number(idParam);
+      if (Number.isNaN(id)) {
+        this.error = `Invalid order id: ${idParam}`;
+        this.loading = false;
+        return;
+      }
+
+      // Call backend to fetch order
+      this.fetchOrder(id);
+    });
+  }
+
+  private fetchOrder(id: number): void {
+    this.loading = true;
+    this.error = null;
+    this.order = null;
 
     this.orderService.getById(id).subscribe({
       next: (order) => {
@@ -49,16 +70,19 @@ export class OrderDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load order', err);
-        this.error = 'Failed to load order.';
+        this.error = 'Failed to load order. Please try again.';
         this.loading = false;
       },
     });
   }
 
-  getStatusClass(status?: string | null): string {
-    if (!status) {
-      return 'status_UNKNOWN';
+  backToList(): void {
+    this.router.navigate(['/orders']);
+  }
+
+  ngOnDestroy(): void {
+    if (this.routeSub) {
+      this.routeSub.unsubscribe();
     }
-    return `status_${status}`;
   }
 }
