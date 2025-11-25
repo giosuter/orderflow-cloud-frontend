@@ -1,31 +1,87 @@
-<!-- src/app/order-new.component.html -->
-
-<div class="order-new-page">
-  <header class="order-new-header">
+<div class="new-order-page">
+  <header class="new-order-header">
     <div>
       <h1>New order</h1>
       <p class="subtitle">Create a new order in OrderFlow Cloud</p>
     </div>
+
+    <button type="button" class="btn" (click)="onCancel()">
+      Orders
+    </button>
   </header>
 
-  <div class="info-box">
-    <p>
-      This is a placeholder page for creating a new order.
-      In the next steps we will implement a proper form with fields like:
-    </p>
-    <ul>
-      <li>Order code</li>
-      <li>Status</li>
-      <li>Customer name</li>
-      <li>Total amount</li>
-    </ul>
-
-    <p>
-      For now, you can navigate back to the list using the button below.
-    </p>
-
-    <button type="button" class="btn" [routerLink]="['/orders']">
-      ← Back to orders
-    </button>
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
   </div>
+
+  <form class="new-order-form" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <label for="code">Code *</label>
+      <input
+        id="code"
+        type="text"
+        [(ngModel)]="draft.code"
+        name="code"
+        required
+        placeholder="e.g. ORD-2025-001"
+      />
+    </div>
+
+    <div class="form-row">
+      <label for="customerName">Customer *</label>
+      <input
+        id="customerName"
+        type="text"
+        [(ngModel)]="draft.customerName"
+        name="customerName"
+        required
+        placeholder="Customer name"
+      />
+    </div>
+
+    <div class="form-row">
+      <label for="status">Status</label>
+      <select
+        id="status"
+        name="status"
+        [(ngModel)]="draft.status"
+      >
+        <option [ngValue]="''">Select status…</option>
+        <option *ngFor="let s of statusOptions" [ngValue]="s">
+          {{ s || '—' }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label for="total">Total</label>
+      <input
+        id="total"
+        type="number"
+        name="total"
+        [(ngModel)]="draft.total"
+        step="0.01"
+        min="0"
+      />
+    </div>
+
+    <div class="form-actions">
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="saving"
+      >
+        {{ saving ? 'Saving…' : 'Create order' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn"
+        (click)="onCancel()"
+        [disabled]="saving"
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
 </div>

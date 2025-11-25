@@ -16,10 +16,10 @@ import { OrderService } from './order.service';
   selector: 'app-orders-detail',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './orders-detail.component.html',
-  styleUrls: ['./orders-detail.component.scss'],
+  templateUrl: './order-detail.component.html',
+  styleUrls: ['./order-detail.component.scss'],
 })
-export class OrdersDetailComponent implements OnInit {
+export class OrderDetailComponent implements OnInit {
   order: Order | null = null;
   loading = false;
   error: string | null = null;

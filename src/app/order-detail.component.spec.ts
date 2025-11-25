@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 
-import { OrdersDetailComponent } from './orders-detail.component';
+import { OrderDetailComponent } from './order-detail.component';
 import { OrderService } from './order.service';
 import { Order } from './order.model';
 
@@ -17,15 +17,15 @@ class MockOrderService {
 }
 
 describe('OrdersDetailComponent', () => {
-  let component: OrdersDetailComponent;
-  let fixture: ComponentFixture<OrdersDetailComponent>;
+  let component: OrderDetailComponent;
+  let fixture: ComponentFixture<OrderDetailComponent>;
   let mockService: MockOrderService;
 
   beforeEach(async () => {
     mockService = new MockOrderService();
 
     await TestBed.configureTestingModule({
-      imports: [OrdersDetailComponent],
+      imports: [OrderDetailComponent],
       providers: [
         {
           provide: OrderService,
@@ -44,7 +44,7 @@ describe('OrdersDetailComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(OrdersDetailComponent);
+    fixture = TestBed.createComponent(OrderDetailComponent);
     component = fixture.componentInstance;
   });
 
