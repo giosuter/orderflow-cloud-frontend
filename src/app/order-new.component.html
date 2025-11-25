@@ -1,0 +1,31 @@
+<!-- src/app/order-new.component.html -->
+
+<div class="order-new-page">
+  <header class="order-new-header">
+    <div>
+      <h1>New order</h1>
+      <p class="subtitle">Create a new order in OrderFlow Cloud</p>
+    </div>
+  </header>
+
+  <div class="info-box">
+    <p>
+      This is a placeholder page for creating a new order.
+      In the next steps we will implement a proper form with fields like:
+    </p>
+    <ul>
+      <li>Order code</li>
+      <li>Status</li>
+      <li>Customer name</li>
+      <li>Total amount</li>
+    </ul>
+
+    <p>
+      For now, you can navigate back to the list using the button below.
+    </p>
+
+    <button type="button" class="btn" [routerLink]="['/orders']">
+      ← Back to orders
+    </button>
+  </div>
+</div>

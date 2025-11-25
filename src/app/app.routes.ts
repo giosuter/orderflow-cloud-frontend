@@ -1,18 +1,45 @@
 import { Routes } from '@angular/router';
-
 import { OrdersListComponent } from './orders-list.component';
 import { OrdersDetailComponent } from './orders-detail.component';
 
 /**
- * Application routes:
- *  - ''          → redirect to '/orders'
- *  - '/orders'   → list of orders
- *  - '/orders/:id' → order detail page
- *  - '**'        → wildcard redirect to '/orders'
+ * Global application routes for OrderFlow Cloud frontend.
+ * Export the constant as `routes` because `app.config.ts`
+ * imports it like this:
+ *
+ *   import { routes } from './app.routes';
+ *
+ * So the name MUST be exactly 'routes'.
  */
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'orders' },
-  { path: 'orders', component: OrdersListComponent },
-  { path: 'orders/:id', component: OrdersDetailComponent },
-  { path: '**', redirectTo: 'orders' },
+  // Redirect empty path to /orders
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'orders',
+  },
+
+  // Main list page
+  {
+    path: 'orders',
+    component: OrdersListComponent,
+  },
+
+  // Placeholder for "create new order" (we will implement later)
+  {
+    path: 'orders/new',
+    component: OrdersDetailComponent,
+  },
+
+  // Details for a given order ID (e.g. /orders/42)
+  {
+    path: 'orders/:id',
+    component: OrdersDetailComponent,
+  },
+
+  // Fallback: anything unknown → /orders
+  {
+    path: '**',
+    redirectTo: 'orders',
+  },
 ];
