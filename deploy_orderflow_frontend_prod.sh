@@ -26,7 +26,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Use the script directory as the project root
 LOCAL_PROJECT_ROOT="$SCRIPT_DIR"
-LOCAL_BUILD_DIR="$LOCAL_PROJECT_ROOT/dist/orderflow-cloud-frontend"
+LOCAL_BUILD_DIR="$LOCAL_PROJECT_ROOT/dist/orderflow-cloud-frontend/browser"
 
 # --------- REMOTE CONFIG ----------------------------------------------
 
