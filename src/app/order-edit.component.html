@@ -2,12 +2,14 @@
   <header class="order-edit-header">
     <div>
       <h1>Edit order</h1>
-      <p class="subtitle">Update the details of the existing order.</p>
+      <p class="subtitle">Update the order details and save your changes.</p>
     </div>
 
-    <button type="button" class="btn" [routerLink]="['/orders', orderId]">
-      ← Back to details
-    </button>
+    <div class="header-actions">
+      <button type="button" class="btn" (click)="onCancel()">
+        ← Back
+      </button>
+    </div>
   </header>
 
   <div *ngIf="error" class="alert alert-error">
@@ -19,10 +21,9 @@
   </div>
 
   <form
-    *ngIf="!loading"
-    (ngSubmit)="onSubmit()"
-    #editForm="ngForm"
-    class="order-form"
+    *ngIf="!loading && order"
+    class="order-edit-form"
+    (ngSubmit)="onSave()"
   >
     <!-- Code -->
     <div class="form-row">
@@ -44,14 +45,14 @@
         name="status"
         [(ngModel)]="draft.status"
       >
-        <option [ngValue]="''">(none)</option>
-        <option *ngFor="let s of statusOptions" [ngValue]="s" [disabled]="s === ''">
+        <option [ngValue]="undefined">None</option>
+        <option *ngFor="let s of statusOptions" [ngValue]="s">
           {{ s }}
         </option>
       </select>
     </div>
 
-    <!-- Customer name -->
+    <!-- Customer -->
     <div class="form-row">
       <label for="customerName">Customer</label>
       <input
@@ -75,16 +76,26 @@
       />
     </div>
 
+    <!-- Meta info (read-only) -->
+    <div class="meta-info" *ngIf="order">
+      <p><strong>Created at:</strong> {{ order.createdAt || '—' }}</p>
+      <p><strong>Updated at:</strong> {{ order.updatedAt || '—' }}</p>
+    </div>
+
     <div class="form-actions">
       <button
         type="submit"
         class="btn btn-primary"
-        [disabled]="saving || editForm.invalid"
+        [disabled]="saving"
       >
-        {{ saving ? 'Saving…' : 'Save changes' }}
+        Save changes
       </button>
-
-      <button type="button" class="btn" (click)="onCancel()" [disabled]="saving">
+      <button
+        type="button"
+        class="btn"
+        (click)="onCancel()"
+        [disabled]="saving"
+      >
         Cancel
       </button>
     </div>

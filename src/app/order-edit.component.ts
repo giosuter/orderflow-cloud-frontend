@@ -1,111 +1,118 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule, Router } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router,
+  RouterModule,
+} from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-
 import { Order, OrderStatus } from './order.model';
 import { OrderService } from './order.service';
 
 /**
  * OrderEditComponent
  *
- * Edit an existing order.
- * - Reads :id from the route.
- * - Loads the order from the backend.
- * - Allows the user to change fields and save.
+ * Edit an existing order:
+ *  - Loads the order by ID from the route param (:id)
+ *  - Copies values into a "draft" object
+ *  - Saves changes via OrderService.update(...)
  */
 @Component({
   selector: 'app-order-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './order-edit.component.html',
   styleUrls: ['./order-edit.component.scss'],
 })
-export class OrderEditComponent {
-  /** ID of the order being edited (from route) */
-  orderId!: number;
+export class OrderEditComponent implements OnInit, OnDestroy {
+  /** The original loaded order, used for ID + createdAt/updatedAt display */
+  order: Order | null = null;
 
   /**
-   * Draft object bound to the form.
-   * Matches the payload we send to update(...) on the service.
+   * Editable "draft" object.
+   * This must match Omit<Order, 'id' | 'createdAt' | 'updatedAt'>:
+   *  - code: string (required)
+   *  - status?: OrderStatus
+   *  - customerName?: string
+   *  - total?: number
    */
-  draft: {
-    code: string;
-    status: '' | OrderStatus;
-    customerName: string;
-    total: number | null;
-  } = {
+  draft: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
     code: '',
-    status: '',
+    status: undefined,
     customerName: '',
     total: 0,
   };
 
-  /** UI state flags */
   loading = true;
   saving = false;
   error: string | null = null;
 
-  /** Status select options (adapt to your real enum values) */
-  statusOptions: ('' | OrderStatus)[] = ['', 'NEW', 'PAID', 'CANCELLED'];
+  /** Options for the status dropdown */
+  statusOptions: OrderStatus[] = ['NEW', 'PAID', 'CANCELLED'];
 
   private routeSub?: Subscription;
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly orderService: OrderService,
     private readonly router: Router,
+    private readonly orderService: OrderService,
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to route params to get the order ID
+    // Subscribe to route params and load order
     this.routeSub = this.route.paramMap.subscribe((params) => {
       const idParam = params.get('id');
-      const id = idParam ? Number(idParam) : NaN;
-
-      if (!idParam || Number.isNaN(id)) {
+      if (!idParam) {
         this.error = 'Invalid order ID.';
         this.loading = false;
         return;
       }
 
-      this.orderId = id;
+      const id = Number(idParam);
+      if (Number.isNaN(id)) {
+        this.error = 'Invalid order ID.';
+        this.loading = false;
+        return;
+      }
+
       this.loadOrder(id);
     });
   }
 
-  /**
-   * Load the existing order from the backend and fill the form.
-   */
   private loadOrder(id: number): void {
     this.loading = true;
     this.error = null;
 
     this.orderService.getById(id).subscribe({
-      next: (order) => {
-        // Fill draft with existing values
+      next: (ord) => {
+        this.order = ord;
+
+        // Fill the editable draft from the loaded order
         this.draft = {
-          code: order.code ?? '',
-          status: (order.status ?? '') as '' | OrderStatus,
-          customerName: order.customerName ?? '',
-          total: order.total ?? 0,
+          code: ord.code,
+          status: ord.status,
+          customerName: ord.customerName ?? '',
+          total: ord.total ?? 0,
         };
 
         this.loading = false;
       },
       error: (err) => {
-        console.error('Failed to load order for edit', err);
+        console.error('Failed to load order', err);
         this.error = 'Failed to load order.';
         this.loading = false;
       },
     });
   }
 
-  /**
-   * Save changes to the backend via OrderService.update(...)
-   */
-  onSubmit(): void {
+  onSave(): void {
+    if (!this.order) {
+      this.error = 'No order loaded.';
+      return;
+    }
+
+    // Simple validation
     if (!this.draft.code || !this.draft.customerName) {
       this.error = 'Code and customer name are required.';
       return;
@@ -114,19 +121,20 @@ export class OrderEditComponent {
     this.saving = true;
     this.error = null;
 
+    const id = this.order.id;
+
+    // Send ALL editable fields, including customerName
     const payload: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
       code: this.draft.code,
-      // If status is empty string, send undefined -> backend can treat as "no status"
-      status: this.draft.status || undefined,
-      customerName: this.draft.customerName,
+      status: this.draft.status,
+      customerName: this.draft.customerName ?? '',
       total: this.draft.total ?? 0,
     };
 
-    this.orderService.update(this.orderId, payload).subscribe({
+    this.orderService.update(id, payload).subscribe({
       next: () => {
         this.saving = false;
-        // Go back to the detail page for the order
-        this.router.navigate(['/orders', this.orderId]);
+        this.router.navigate(['/orders', id]);
       },
       error: (err) => {
         console.error('Failed to update order', err);
@@ -136,11 +144,12 @@ export class OrderEditComponent {
     });
   }
 
-  /**
-   * Cancel editing and go back to the order detail page.
-   */
   onCancel(): void {
-    this.router.navigate(['/orders', this.orderId]);
+    if (this.order) {
+      this.router.navigate(['/orders', this.order.id]);
+    } else {
+      this.router.navigate(['/orders']);
+    }
   }
 
   ngOnDestroy(): void {
