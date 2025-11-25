@@ -9,28 +9,26 @@
 # - We COPY ONLY THE CONTENTS of that browser folder to Hostpoint:
 #     /home/zitatusi/www/devprojects.ch/orderflow-cloud
 #
-# So on Hostpoint you get:
+# Result on Hostpoint:
 #   /home/zitatusi/www/devprojects.ch/orderflow-cloud/index.html
-#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/main-XXX.js
-#   ...
+#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/main-*.js
+#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/polyfills-*.js
+#   /home/zitatusi/www/devprojects.ch/orderflow-cloud/styles-*.css
 # =====================================================================
 
 set -euo pipefail
 
 # --------- PROJECT ROOT ----------------------------------------------
-# Directory where this script lives (works for Jenkins and local)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCAL_PROJECT_ROOT="$SCRIPT_DIR"
 
 echo ">>> Project root (SCRIPT_DIR): $LOCAL_PROJECT_ROOT"
 
-# Angular *browser* build dir (this MUST match angular.json outputPath)
+# MUST match angular.json outputPath
 LOCAL_BUILD_DIR="$LOCAL_PROJECT_ROOT/dist/orderflow-cloud-frontend/browser"
 
-# Safety check: browser folder must exist
 if [ ! -d "$LOCAL_BUILD_DIR" ]; then
   echo "ERROR: Expected build dir does not exist: $LOCAL_BUILD_DIR"
-  echo "Did 'ng build' run with outputPath = dist/orderflow-cloud-frontend/browser ?"
   exit 1
 fi
 
@@ -54,16 +52,13 @@ echo ">>> [4/4] Deploying *contents* of browser/ via rsync to Hostpoint..."
 echo "     Source (local):  $LOCAL_BUILD_DIR/"
 echo "     Target (remote): $REMOTE_APP_DIR/"
 
-# IMPORTANT:
-#   - Trailing slash on $LOCAL_BUILD_DIR/ =>
-#     copy CONTENTS of browser/, NOT browser directory itself.
+# Trailing slash = copy CONTENTS of browser/, not browser dir itself
 rsync -avz --delete \
   "$LOCAL_BUILD_DIR"/ \
   "$REMOTE_HOST:$REMOTE_APP_DIR"/
 
 echo "==================================================================="
 echo "Deployment finished."
-echo
 echo "Frontend should now be reachable at:"
 echo "  https://devprojects.ch/orderflow-cloud/"
 echo "==================================================================="
