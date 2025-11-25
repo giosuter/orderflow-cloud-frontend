@@ -4,11 +4,10 @@
 #
 # Build and deploy the OrderFlow Cloud Angular frontend to Hostpoint.
 #
-# This script is designed to work both:
-#  - when run manually from your local dev project
-#  - when run by Jenkins from its workspace
-#
-# It always uses *the directory where this script lives* as the project root.
+# This script:
+#  - assumes Angular outputs to: dist/orderflow-cloud-frontend/browser
+#  - copies ONLY the CONTENTS of that browser folder to Hostpoint:
+#      /home/zitatusi/www/devprojects.ch/orderflow-cloud
 #
 # Final production URL:
 #   https://devprojects.ch/orderflow-cloud/
@@ -20,25 +19,20 @@
 
 set -euo pipefail
 
-# --------- PROJECT ROOT DETECTION -------------------------------------
+# --------- PROJECT ROOT ----------------------------------------------
 # Directory where this script lives (works for Jenkins and local)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCAL_PROJECT_ROOT="$SCRIPT_DIR"
 
 echo ">>> Project root (SCRIPT_DIR): $LOCAL_PROJECT_ROOT"
 
-# Angular dist root
-LOCAL_DIST_ROOT="$LOCAL_PROJECT_ROOT/dist/orderflow-cloud-frontend"
+# Angular *browser* build dir (this is where Angular puts index.html, main-*.js, etc.)
+LOCAL_BUILD_DIR="$LOCAL_PROJECT_ROOT/dist/orderflow-cloud-frontend/browser"
 
-# Decide which folder actually contains the browser build
-if [ -d "$LOCAL_DIST_ROOT/browser" ]; then
-  # Case 1: Angular created dist/orderflow-cloud-frontend/browser (your preferred case)
-  LOCAL_BUILD_DIR="$LOCAL_DIST_ROOT/browser"
-  echo ">>> Using build dir with browser subfolder: $LOCAL_BUILD_DIR"
-else
-  # Case 2: Angular wrote directly to dist/orderflow-cloud-frontend
-  LOCAL_BUILD_DIR="$LOCAL_DIST_ROOT"
-  echo ">>> Using build dir without browser subfolder: $LOCAL_BUILD_DIR"
+if [ ! -d "$LOCAL_BUILD_DIR" ]; then
+  echo "ERROR: Expected build dir does not exist: $LOCAL_BUILD_DIR"
+  echo "Did ng build run with outputPath including /browser ?"
+  exit 1
 fi
 
 # --------- REMOTE CONFIG ----------------------------------------------
@@ -57,8 +51,13 @@ npx ng build --configuration production --base-href /orderflow-cloud/
 echo ">>> [3/4] Ensuring remote target directory exists: $REMOTE_APP_DIR"
 ssh "$REMOTE_HOST" "mkdir -p '$REMOTE_APP_DIR'"
 
-echo ">>> [4/4] Deploying build artifacts via rsync to Hostpoint..."
-# IMPORTANT: trailing slash on source so ONLY CONTENTS are copied, not the folder name
+echo ">>> [4/4] Deploying *contents* of browser/ via rsync to Hostpoint..."
+echo "     Source (local):  $LOCAL_BUILD_DIR/"
+echo "     Target (remote): $REMOTE_APP_DIR/"
+
+# IMPORTANT:
+#   - the trailing slash on $LOCAL_BUILD_DIR/ means:
+#       copy CONTENTS of browser, NOT the browser folder itself
 rsync -avz --delete \
   "$LOCAL_BUILD_DIR"/ \
   "$REMOTE_HOST:$REMOTE_APP_DIR"/
