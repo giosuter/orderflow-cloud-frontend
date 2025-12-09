@@ -1,133 +1,89 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-
-import { OrderStatus } from './order.model';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrderService } from './order.service';
 
-/**
- *
- * Internal type for the "create new order" form.
- * - status can be:
- *    - ''  → no selection yet (placeholder in the dropdown)
- *    - one of the real OrderStatus values
- */
-type NewOrderDraft = {
-  code: string;
-  status: '' | OrderStatus;
-  customerName: string;
-  total: number;
-};
-
-/**
- * OrderNewComponent
- *
- * Simple "create new order" page using template-driven forms.
- * Responsibilities:
- *  - Manage the form model (draft)
- *  - Perform minimal validation
- *  - Call OrderService.create(...) on submit
- *  - Navigate back to the orders list on success
- */
 @Component({
   selector: 'app-order-new',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslateModule],
   templateUrl: './order-new.component.html',
-  styleUrls: ['./order-new.component.scss'],
+  styleUrls: ['./order-new.component.scss']
 })
-export class OrderNewComponent {
-  /**
-   * Form model bound to the template.
-   * Default:
-   *  - status: '' → no status selected initially
-   */
-  draft: NewOrderDraft = {
-    code: '',
-    status: '',
-    customerName: '',
-    total: 0,
-  };
+export class OrderNewComponent implements OnInit {
 
-  /** Flag to indicate a save operation is in progress */
-  saving = false;
+  orderForm!: FormGroup;
+  isSaving = false;
+  saveError: string | null = null;
 
-  /** Error message shown in the template if something goes wrong */
-  error: string | null = null;
-
-  /**
-   * Status options for the dropdown.
-   * These MUST match the backend enum:
-   *   NEW, PROCESSING, PAID, SHIPPED, CANCELLED
-   *
-   * The placeholder ("no selection") is handled separately in the template.
-   */
-  statusOptions: OrderStatus[] = [
-    'NEW',
-    'PROCESSING',
-    'PAID',
-    'SHIPPED',
-    'CANCELLED',
-  ];
+  // Must match your backend enum values
+  statuses: string[] = ['NEW', 'PROCESSING', 'PAID', 'SHIPPED', 'CANCELLED'];
 
   constructor(
-    private readonly orderService: OrderService,
-    private readonly router: Router,
+    private fb: FormBuilder,
+    private orderService: OrderService,
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
-  /**
-   * Submit handler:
-   *  - Validates required fields (code + customerName)
-   *  - Builds a payload compatible with the backend DTO
-   *  - Calls OrderService.create(...)
-   *  - Navigates back to /orders on success
-   */
-  onSubmit(): void {
-    // Very basic validation (can be improved later with Angular validation)
-    if (!this.draft.code || !this.draft.customerName) {
-      this.error = 'Code and customer name are required.';
-      return;
-    }
-
-    this.saving = true;
-    this.error = null;
-
-    // Build payload for the service (omit empty status)
-    const payload: {
-      code: string;
-      status?: OrderStatus;
-      customerName: string;
-      total: number;
-    } = {
-      code: this.draft.code,
-      customerName: this.draft.customerName,
-      total: this.draft.total,
-    };
-
-    // Only include status if the user actually chose something
-    if (this.draft.status !== '') {
-      payload.status = this.draft.status;
-    }
-
-    this.orderService.create(payload).subscribe({
-      next: () => {
-        this.saving = false;
-        this.router.navigate(['/orders']);
-      },
-      error: (err: unknown) => {
-        console.error('Failed to create order', err);
-        this.error = 'Failed to create order. Please try again.';
-        this.saving = false;
-      },
+  ngOnInit(): void {
+    this.orderForm = this.fb.group({
+      code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      customerName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      status: ['NEW', Validators.required],
+      total: [null, [Validators.required, Validators.min(0)]],
+      comment: ['']
     });
   }
 
-  /**
-   * Cancel handler:
-   *  - Simply navigates back to the orders list.
-   */
+  // any → avoid strict template typing noise
+  get f(): any {
+    return this.orderForm.controls;
+  }
+
+  onSubmit(): void {
+    this.saveError = null;
+
+    if (this.orderForm.invalid) {
+      this.orderForm.markAllAsTouched();
+      this.saveError = this.translate.instant('ORDERS.FORM.VALIDATION_ERROR');
+      return;
+    }
+
+    const newOrder = this.orderForm.value; // plain object from the form
+
+    this.isSaving = true;
+
+    // Cast to any so TS stops comparing Order vs CreateOrderPayload
+    this.orderService.create(newOrder as any).subscribe({
+      next: () => {
+        this.isSaving = false;
+        this.router.navigate(['/orders']);
+      },
+      error: () => {
+        this.isSaving = false;
+        this.saveError = this.translate.instant('ORDERS.FORM.SAVE_ERROR');
+      }
+    });
+  }
+
   onCancel(): void {
+    if (this.orderForm.dirty) {
+      const confirmText = this.translate.instant('ORDERS.FORM.CONFIRM_CANCEL');
+      const confirmed = window.confirm(confirmText);
+      if (!confirmed) {
+        return;
+      }
+    }
     this.router.navigate(['/orders']);
+  }
+
+  translateStatus(status: string | null | undefined): string {
+    if (!status) {
+      return '';
+    }
+    return 'ORDERS.STATUS.' + status;
   }
 }

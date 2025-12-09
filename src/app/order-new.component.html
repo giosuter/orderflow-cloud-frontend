@@ -1,104 +1,141 @@
-<div class="order-new-page">
-  <header class="order-new-header">
+<div class="order-page">
+  <header class="order-header">
     <div>
-      <h1>New order</h1>
-      <p class="subtitle">Create a new order in OrderFlow Cloud</p>
+      <h1>{{ 'ORDERS.FORM.TITLE_NEW' | translate }}</h1>
+      <p class="subtitle">
+        {{ 'ORDERS.FORM.SUBTITLE_NEW' | translate }}
+      </p>
     </div>
 
-    <button type="button" class="btn" (click)="onCancel()">
-      ← Back to orders
-    </button>
+    <div class="header-actions">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        {{ 'ORDERS.ACTIONS.BACK' | translate }}
+      </button>
+    </div>
   </header>
 
-  <div *ngIf="error" class="alert alert-error">
-    {{ error }}
-  </div>
-
-  <form (ngSubmit)="onSubmit()" #orderForm="ngForm" class="order-form">
-    <!-- Code -->
-    <div class="form-row">
-      <label for="code">Code *</label>
-      <input
-        id="code"
-        name="code"
-        type="text"
-        required
-        [(ngModel)]="draft.code"
-        #codeCtrl="ngModel"
-      />
-      <div class="field-error" *ngIf="codeCtrl.invalid && codeCtrl.touched">
-        Code is required.
+  <section class="order-content">
+    <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Code -->
+      <div class="form-row">
+        <label for="code">
+          {{ 'ORDERS.FIELDS.CODE' | translate }}
+        </label>
+        <input
+          id="code"
+          type="text"
+          formControlName="code"
+          [class.invalid]="f['code'].invalid && (f['code'].touched || f['code'].dirty)"
+          [placeholder]="'ORDERS.PLACEHOLDERS.CODE' | translate"
+        />
+        <div class="error" *ngIf="f['code'].invalid && (f['code'].touched || f['code'].dirty)">
+          <span *ngIf="f['code'].errors?.['required']">
+            {{ 'ORDERS.VALIDATION.REQUIRED' | translate }}
+          </span>
+          <span *ngIf="f['code'].errors?.['minlength']">
+            {{ 'ORDERS.VALIDATION.MIN_LENGTH' | translate:{ min: f['code'].errors['minlength'].requiredLength } }}
+          </span>
+          <span *ngIf="f['code'].errors?.['maxlength']">
+            {{ 'ORDERS.VALIDATION.MAX_LENGTH' | translate:{ max: f['code'].errors['maxlength'].requiredLength } }}
+          </span>
+        </div>
       </div>
-    </div>
 
-    <!-- Customer name -->
-    <div class="form-row">
-      <label for="customerName">Customer name *</label>
-      <input
-        id="customerName"
-        name="customerName"
-        type="text"
-        required
-        [(ngModel)]="draft.customerName"
-        #customerCtrl="ngModel"
-      />
-      <div
-        class="field-error"
-        *ngIf="customerCtrl.invalid && customerCtrl.touched"
-      >
-        Customer name is required.
+      <!-- Customer name -->
+      <div class="form-row">
+        <label for="customerName">
+          {{ 'ORDERS.FIELDS.CUSTOMER_NAME' | translate }}
+        </label>
+        <input
+          id="customerName"
+          type="text"
+          formControlName="customerName"
+          [class.invalid]="f['customerName'].invalid && (f['customerName'].touched || f['customerName'].dirty)"
+          [placeholder]="'ORDERS.PLACEHOLDERS.CUSTOMER_NAME' | translate"
+        />
+        <div class="error" *ngIf="f['customerName'].invalid && (f['customerName'].touched || f['customerName'].dirty)">
+          <span *ngIf="f['customerName'].errors?.['required']">
+            {{ 'ORDERS.VALIDATION.REQUIRED' | translate }}
+          </span>
+          <span *ngIf="f['customerName'].errors?.['minlength']">
+            {{ 'ORDERS.VALIDATION.MIN_LENGTH' | translate:{ min: f['customerName'].errors['minlength'].requiredLength } }}
+          </span>
+          <span *ngIf="f['customerName'].errors?.['maxlength']">
+            {{ 'ORDERS.VALIDATION.MAX_LENGTH' | translate:{ max: f['customerName'].errors['maxlength'].requiredLength } }}
+          </span>
+        </div>
       </div>
-    </div>
 
-    <!-- Status -->
-    <div class="form-row">
-      <label for="status">Status</label>
-      <select
-        id="status"
-        name="status"
-        [(ngModel)]="draft.status"
-      >
-        <!-- Placeholder: mapped to '' in the model -->
-        <option [ngValue]="''">-- Select status --</option>
+      <!-- Status -->
+      <div class="form-row">
+        <label for="status">
+          {{ 'ORDERS.FIELDS.STATUS' | translate }}
+        </label>
+        <select
+          id="status"
+          formControlName="status"
+          [class.invalid]="f['status'].invalid && (f['status'].touched || f['status'].dirty)"
+        >
+          <option *ngFor="let status of statuses" [value]="status">
+            {{ translateStatus(status) | translate }}
+          </option>
+        </select>
+        <div class="error" *ngIf="f['status'].invalid && (f['status'].touched || f['status'].dirty)">
+          <span *ngIf="f['status'].errors?.['required']">
+            {{ 'ORDERS.VALIDATION.REQUIRED' | translate }}
+          </span>
+        </div>
+      </div>
 
-        <!-- Real status values from the backend enum -->
-        <option *ngFor="let s of statusOptions" [ngValue]="s">
-          {{ s }}
-        </option>
-      </select>
-    </div>
+      <!-- Total -->
+      <div class="form-row">
+        <label for="total">
+          {{ 'ORDERS.FIELDS.TOTAL' | translate }}
+        </label>
+        <input
+          id="total"
+          type="number"
+          step="0.01"
+          formControlName="total"
+          [class.invalid]="f['total'].invalid && (f['total'].touched || f['total'].dirty)"
+          [placeholder]="'ORDERS.PLACEHOLDERS.TOTAL' | translate"
+        />
+        <div class="error" *ngIf="f['total'].invalid && (f['total'].touched || f['total'].dirty)">
+          <span *ngIf="f['total'].errors?.['required']">
+            {{ 'ORDERS.VALIDATION.REQUIRED' | translate }}
+          </span>
+          <span *ngIf="f['total'].errors?.['min']">
+            {{ 'ORDERS.VALIDATION.MIN_VALUE' | translate:{ min: f['total'].errors['min'].min } }}
+          </span>
+        </div>
+      </div>
 
-    <!-- Total -->
-    <div class="form-row">
-      <label for="total">Total amount</label>
-      <input
-        id="total"
-        name="total"
-        type="number"
-        min="0"
-        step="0.01"
-        [(ngModel)]="draft.total"
-      />
-    </div>
+      <!-- Comment -->
+      <div class="form-row">
+        <label for="comment">
+          {{ 'ORDERS.FIELDS.COMMENT' | translate }}
+        </label>
+        <textarea
+          id="comment"
+          rows="3"
+          formControlName="comment"
+          [placeholder]="'ORDERS.PLACEHOLDERS.COMMENT' | translate"
+        ></textarea>
+      </div>
 
-    <!-- Form actions -->
-    <div class="form-actions">
-      <button
-        type="submit"
-        class="btn btn-primary"
-        [disabled]="saving || orderForm.invalid"
-      >
-        {{ saving ? 'Saving…' : 'Save' }}
-      </button>
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          {{ 'ORDERS.ACTIONS.SAVE' | translate }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isSaving">
+          {{ 'ORDERS.ACTIONS.CANCEL' | translate }}
+        </button>
+      </div>
 
-      <button
-        type="button"
-        class="btn"
-        (click)="onCancel()"
-        [disabled]="saving"
-      >
-        Cancel
-      </button>
-    </div>
-  </form>
+      <div class="error global-error" *ngIf="saveError">
+        {{ saveError }}
+      </div>
+    </form>
+  </section>
 </div>
