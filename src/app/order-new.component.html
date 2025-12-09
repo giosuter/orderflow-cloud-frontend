@@ -58,7 +58,10 @@
         name="status"
         [(ngModel)]="draft.status"
       >
-        <option [ngValue]="null">-- Select status --</option>
+        <!-- Placeholder: mapped to '' in the model -->
+        <option [ngValue]="''">-- Select status --</option>
+
+        <!-- Real status values from the backend enum -->
         <option *ngFor="let s of statusOptions" [ngValue]="s">
           {{ s }}
         </option>

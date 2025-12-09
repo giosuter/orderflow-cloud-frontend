@@ -1,98 +1,95 @@
+/**
+ *
+ * Service responsible for talking to the Order REST API.
+ *
+ * IMPORTANT:
+ *  - This version is adapted to your existing components:
+ *      - order-detail.component.ts uses: getById(id)
+ *      - order-new.component.ts   uses: create(order)
+ *  - We keep the method names they already expect.
+ *  - We use flexible types (Partial<Order>) so the TS compiler
+ *    does not complain if some fields (like status) are initially missing.
+ */
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../environments/environment';
-import { Order, OrderStatus } from './order.model';
+import { Order } from './order.model';
 
-/**
- * OrderService is the single entry point for talking to the OrderFlow API
- * from the Angular frontend.
- *
- * It hides the concrete URLs and uses environment.apiBaseUrl so that:
- *  - on localhost (dev) it calls http://localhost:8080/orderflow-api/api/...
- *  - on Hostpoint (prod) it calls https://devprojects.ch/orderflow-api/api/...
- */
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class OrderService {
+
   /**
-   * Base URL for all order-related calls.
+   * Base URL for all order endpoints.
    *
-   * environment.apiBaseUrl is defined in:
-   *  - src/environments/environment.development.ts  (dev)
-   *  - src/environments/environment.ts              (prod)
+   * Expected values:
+   *  - Dev:  http://localhost:8080/orderflow-api/api
+   *  - Prod: https://devprojects.ch/orderflow-api/api
    *
-   * For example (dev):
-   *   apiBaseUrl = 'http://localhost:8080/orderflow-api/api'
-   *
-   * So this baseUrl becomes:
-   *   'http://localhost:8080/orderflow-api/api/orders'
+   * The backend maps orders to /api/orders, so here we add /orders.
    */
   private readonly baseUrl = `${environment.apiBaseUrl}/orders`;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private http: HttpClient) {}
 
   /**
-   * GET /api/orders
+   * Load all orders (used by the list component).
    *
-   * Returns all orders as an array.
+   * GET /orderflow-api/api/orders
    */
   getAll(): Observable<Order[]> {
     return this.http.get<Order[]>(this.baseUrl);
   }
 
   /**
-   * GET /api/orders/{id}
+   * Alias for getAll(), in case some component uses getOrders().
+   */
+  getOrders(): Observable<Order[]> {
+    return this.getAll();
+  }
+
+  /**
+   * Load a single order by ID (used by the detail/edit component).
    *
-   * Fetch a single order by its technical id.
+   * GET /orderflow-api/api/orders/{id}
    */
   getById(id: number): Observable<Order> {
     return this.http.get<Order>(`${this.baseUrl}/${id}`);
   }
 
   /**
-   * GET /api/orders/search?code=...&status=...
+   * Create a new order (used by order-new.component.ts).
    *
-   * Search orders by optional code substring and status.
-   * Both parameters are optional to match the backend controller.
-   */
-  search(code?: string, status?: OrderStatus): Observable<Order[]> {
-    const params: Record<string, string> = {};
-
-    if (code) {
-      params['code'] = code;
-    }
-    if (status) {
-      params['status'] = status;
-    }
-
-    return this.http.get<Order[]>(`${this.baseUrl}/search`, { params });
-  }
-
-  /**
-   * POST /api/orders
+   * POST /orderflow-api/api/orders
    *
-   * Create a new order. Backend returns the created entity (with id, timestamps).
+   * We accept Partial<Order> to avoid TypeScript errors when the
+   * caller does not set all fields (e.g. status initially undefined).
+   * The backend is responsible for validating required fields.
    */
-  create(order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Observable<Order> {
+  create(order: Partial<Order>): Observable<Order> {
     return this.http.post<Order>(this.baseUrl, order);
   }
 
   /**
-   * PUT /api/orders/{id}
+   * Update an existing order (used by order-edit.component.ts).
    *
-   * Update an existing order (id in the URL, body without id).
+   * PUT /orderflow-api/api/orders/{id}
+   *
+   * We expect the caller to pass an object that at least contains "id".
+   * Other fields may be partial (e.g. only some fields changed).
    */
-  update(id: number, order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Observable<Order> {
-    return this.http.put<Order>(`${this.baseUrl}/${id}`, order);
-  }
+update(id: number, order: Partial<Order>): Observable<Order> {
+  return this.http.put<Order>(`${this.baseUrl}/${id}`, order);
+}
 
   /**
-   * DELETE /api/orders/{id}
+   * Delete an order by ID (for future use: delete buttons).
    *
-   * Delete an order. Backend returns 204 No Content on success.
+   * DELETE /orderflow-api/api/orders/{id}
    */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
