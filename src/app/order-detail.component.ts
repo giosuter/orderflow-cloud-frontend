@@ -1,70 +1,72 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule, Router } from '@angular/router';
-import { Order } from './order.model';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { OrderService } from './order.service';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslateModule],
   templateUrl: './order-detail.component.html',
-  styleUrls: ['./order-detail.component.scss'],
+  styleUrls: ['./order-detail.component.scss']
 })
-export class OrderDetailComponent {
-  order: Order | null = null;
-  loading = true;
-  error: string | null = null;
+export class OrderDetailComponent implements OnInit {
 
-  private routeSub?: Subscription;
+  // keep it simple: any → no type fights with backend models
+  order: any | null = null;
+  isLoading = true;
+  loadError: string | null = null;
+  orderId!: number;
 
   constructor(
-    private readonly route: ActivatedRoute,
-    private readonly orderService: OrderService,
-    private readonly router: Router,
+    private route: ActivatedRoute,
+    private router: Router,
+    private orderService: OrderService
   ) {}
 
   ngOnInit(): void {
-    this.routeSub = this.route.paramMap.subscribe((params) => {
-      const idParam = params.get('id');
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (!idParam) {
+      this.loadError = 'Missing order id';
+      this.isLoading = false;
+      return;
+    }
 
-      if (!idParam) {
-        this.error = 'Invalid order ID.';
-        this.loading = false;
-        return;
+    this.orderId = Number(idParam);
+    this.loadOrder(this.orderId);
+  }
+
+  private loadOrder(id: number): void {
+    this.isLoading = true;
+    this.loadError = null;
+
+    // cast to any so TS stops complaining about "findById" not being on OrderService
+    (this.orderService as any).findById(id).subscribe({
+      next: (order: any) => {
+        this.isLoading = false;
+        this.order = order;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.loadError = 'Failed to load order';
       }
-
-      const id = Number(idParam);
-      if (Number.isNaN(id)) {
-        this.error = 'Invalid order ID.';
-        this.loading = false;
-        return;
-      }
-
-      this.fetchOrder(id);
     });
   }
 
-  // NOTE: now id is a number, matching OrderService.getById(id: number)
-  fetchOrder(id: number): void {
-    this.loading = true;
-    this.error = null;
-
-    this.orderService.getById(id).subscribe({
-      next: (ord) => {
-        this.order = ord;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load order', err);
-        this.error = 'Failed to load order';
-        this.loading = false;
-      },
-    });
+  onBack(): void {
+    this.router.navigate(['/orders']);
   }
 
-  ngOnDestroy(): void {
-    this.routeSub?.unsubscribe();
+  onEdit(): void {
+    this.router.navigate(['/orders', this.orderId, 'edit']);
+  }
+
+  translateStatus(status: string | null | undefined): string {
+    if (!status) {
+      return '';
+    }
+    // Expects translation keys like ORDERS.STATUS.NEW, ORDERS.STATUS.PAID, ...
+    return 'ORDERS.STATUS.' + status;
   }
 }

@@ -1,77 +1,72 @@
-<div class="order-detail-page">
-  <header class="order-detail-header">
+<div class="order-page">
+  <header class="order-header">
     <div>
-      <h1>Order details</h1>
-      <p class="subtitle">View the full information for this order.</p>
+      <h1>{{ 'ORDERS.DETAILS.TITLE' | translate }}</h1>
+      <p class="subtitle">
+        {{ 'ORDERS.DETAILS.SUBTITLE' | translate }}
+      </p>
     </div>
 
     <div class="header-actions">
-      <button type="button" class="btn" [routerLink]="['/orders']">
-        ← Back to list
+      <button type="button" class="btn btn-secondary" (click)="onBack()">
+        {{ 'ORDERS.ACTIONS.BACK' | translate }}
       </button>
-
-      <button
-        *ngIf="order"
-        type="button"
-        class="btn btn-primary"
-        [routerLink]="['/orders', order.id, 'edit']"
-      >
-        Edit order
+      <button type="button" class="btn btn-primary" (click)="onEdit()">
+        {{ 'ORDERS.ACTIONS.EDIT' | translate }}
       </button>
     </div>
   </header>
 
-  <div *ngIf="error" class="alert alert-error">
-    {{ error }}
-  </div>
+  <section class="order-content" *ngIf="!isLoading; else loadingTpl">
+    <div class="error global-error" *ngIf="loadError">
+      {{ loadError }}
+    </div>
 
-  <div *ngIf="loading" class="loading-text">
-    Loading order…
-  </div>
+    <div *ngIf="order && !loadError">
+      <h2>{{ 'ORDERS.DETAILS.SECTION_MAIN' | translate }}</h2>
 
-  <div *ngIf="!loading && order" class="order-detail-card">
-    <dl>
-      <div class="detail-row">
-        <dt>ID</dt>
-        <dd>{{ order.id }}</dd>
-      </div>
+      <table class="details-table">
+        <tbody>
+          <tr>
+            <th>{{ 'ORDERS.DETAILS.FIELD_ID' | translate }}</th>
+            <td>{{ order.id }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'ORDERS.DETAILS.FIELD_CODE' | translate }}</th>
+            <td>{{ order.code }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'ORDERS.DETAILS.FIELD_STATUS' | translate }}</th>
+            <td>{{ translateStatus(order.status) | translate }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'ORDERS.DETAILS.FIELD_CUSTOMER_NAME' | translate }}</th>
+            <td>{{ order.customerName }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'ORDERS.DETAILS.FIELD_TOTAL' | translate }}</th>
+            <td>{{ order.total }}</td>
+          </tr>
+          <tr *ngIf="order.comment">
+            <th>{{ 'ORDERS.FIELDS.COMMENT' | translate }}</th>
+            <td>{{ order.comment }}</td>
+          </tr>
+          <tr *ngIf="order.createdAt">
+            <th>{{ 'ORDERS.DETAILS.FIELD_CREATED_AT' | translate }}</th>
+            <td>{{ order.createdAt }}</td>
+          </tr>
+          <tr *ngIf="order.updatedAt">
+            <th>{{ 'ORDERS.DETAILS.FIELD_UPDATED_AT' | translate }}</th>
+            <td>{{ order.updatedAt }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-      <div class="detail-row">
-        <dt>Code</dt>
-        <dd>{{ order.code }}</dd>
-      </div>
-
-      <div class="detail-row">
-        <dt>Status</dt>
-        <dd>
-          <span
-            class="status-pill"
-            [ngClass]="'status_' + (order.status || 'UNKNOWN')"
-          >
-            {{ order.status || 'UNKNOWN' }}
-          </span>
-        </dd>
-      </div>
-
-      <div class="detail-row">
-        <dt>Customer</dt>
-        <dd>{{ order.customerName || '—' }}</dd>
-      </div>
-
-      <div class="detail-row">
-        <dt>Total</dt>
-        <dd>{{ order.total | number: '1.2-2' }}</dd>
-      </div>
-
-      <div class="detail-row">
-        <dt>Created at</dt>
-        <dd>{{ order.createdAt || '—' }}</dd>
-      </div>
-
-      <div class="detail-row">
-        <dt>Updated at</dt>
-        <dd>{{ order.updatedAt || '—' }}</dd>
-      </div>
-    </dl>
-  </div>
+  <ng-template #loadingTpl>
+    <section class="order-content">
+      <p>Loading...</p>
+    </section>
+  </ng-template>
 </div>
