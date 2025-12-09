@@ -1,7 +1,48 @@
-/* Global font override for the entire frontend */
-html, body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #222;
+/* 
+ * Global baseline styling for OrderFlow Cloud frontend.
+ * - Light grey background
+ * - Clean system font
+ * - Subtle card shadows
+ * - Consistent buttons & links
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f3f4f6; /* light grey */
+  color: #111827;       /* dark grey text */
+}
+
+/* Default link style */
+a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Base button style (can be extended with .btn-primary, .btn-ghost, etc.) */
+button {
+  font-family: inherit;
+}
+
+/* Generic container helper for pages */
+.page-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
 }
