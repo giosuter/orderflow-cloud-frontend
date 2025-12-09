@@ -1,121 +1,147 @@
 <div class="orders-page">
-  <!-- Header with title + New order button -->
+  <!-- Header with title and "New order" button -->
   <header class="orders-header">
     <div>
-      <h1>Orders</h1>
-      <p class="subtitle">Manage your orders in OrderFlow Cloud</p>
+      <h1>{{ 'ORDERS.LIST.TITLE' | translate }}</h1>
+      <p class="subtitle">{{ 'ORDERS.LIST.SUBTITLE' | translate }}</p>
     </div>
 
     <button type="button" class="btn btn-primary" (click)="onCreate()">
-      + New order
+      {{ 'ORDERS.LIST.BUTTON_NEW' | translate }}
     </button>
   </header>
-
-  <!-- Filters / search bar -->
-  <section class="filters-panel">
-    <form (ngSubmit)="onSearch()" class="filters-form">
-      <div class="filter-field">
-        <label for="filterCode">Code</label>
-        <input
-          id="filterCode"
-          name="filterCode"
-          type="text"
-          [(ngModel)]="filterCode"
-          placeholder="e.g. ORD-1001"
-        />
-      </div>
-
-      <div class="filter-field">
-        <label for="filterStatus">Status</label>
-        <select
-          id="filterStatus"
-          name="filterStatus"
-          [(ngModel)]="filterStatus"
-        >
-          <option [ngValue]="''">All</option>
-          <option *ngFor="let s of statusOptions" [ngValue]="s">
-            {{ s }}
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-actions">
-        <button
-          type="submit"
-          class="btn btn-secondary"
-          [disabled]="loading"
-        >
-          Search
-        </button>
-        <button
-          type="button"
-          class="btn"
-          (click)="onResetFilters()"
-          [disabled]="loading"
-        >
-          Reset
-        </button>
-      </div>
-    </form>
-  </section>
 
   <!-- Error message -->
   <div *ngIf="error" class="alert alert-error">
     {{ error }}
   </div>
 
-  <!-- Loading indicator -->
-  <div *ngIf="loading && !error" class="loading-state">
-    Loading orders…
+  <!-- Filter bar -->
+  <form (ngSubmit)="onSearch()" class="filter-bar">
+    <span class="filter-label">
+      {{ 'ORDERS.LIST.FILTER_LABEL' | translate }}
+    </span>
+
+    <!-- Code filter -->
+    <label for="codeFilter">
+      {{ 'ORDERS.LIST.FILTER_CODE_LABEL' | translate }}
+    </label>
+    <input
+      id="codeFilter"
+      name="codeFilter"
+      type="text"
+      [(ngModel)]="filterCode"
+      [placeholder]="'ORDERS.LIST.FILTER_CODE_PLACEHOLDER' | translate"
+    />
+
+    <!-- Status filter -->
+    <label for="statusFilter">
+      {{ 'ORDERS.LIST.FILTER_STATUS_LABEL' | translate }}
+    </label>
+    <select
+      id="statusFilter"
+      name="statusFilter"
+      [(ngModel)]="filterStatus"
+    >
+      <option [ngValue]="''">
+        {{ 'ORDERS.LIST.FILTER_STATUS_ALL' | translate }}
+      </option>
+      <option *ngFor="let s of statusOptions" [ngValue]="s">
+        {{ ('ORDERS.STATUS.' + s) | translate }}
+      </option>
+    </select>
+
+    <!-- Filter actions -->
+    <button type="submit" class="btn">
+      {{ 'ORDERS.LIST.BUTTON_APPLY' | translate }}
+    </button>
+
+    <button
+      type="button"
+      class="btn"
+      (click)="onResetFilters()"
+    >
+      {{ 'ORDERS.LIST.BUTTON_RESET' | translate }}
+    </button>
+  </form>
+
+  <!-- Loading / empty states -->
+  <div *ngIf="loading" class="loading-text">
+    {{ 'ORDERS.LIST.LOADING' | translate }}
   </div>
 
-  <!-- Orders table -->
-  <table
-    *ngIf="!loading && !error && orders.length > 0"
-    class="orders-table"
+  <div
+    *ngIf="!loading && filteredOrders.length === 0"
+    class="empty-text"
   >
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Code</th>
-        <th>Status</th>
-        <th>Customer</th>
-        <th>Total</th>
-        <th>Created</th>
-        <th class="actions">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let order of orders">
-        <td>{{ order.id }}</td>
-        <td>{{ order.code }}</td>
-        <td>{{ order.status || '—' }}</td>
-        <td>{{ order.customerName || '—' }}</td>
-        <td>{{ order.total | number : '1.2-2' }}</td>
-        <td>{{ order.createdAt || '—' }}</td>
-        <td class="actions">
-          <div class="action-buttons">
-            <button type="button" class="btn-link" (click)="onView(order)">
-              View
-            </button>
-            <button type="button" class="btn-link" (click)="onEdit(order)">
-              Edit
-            </button>
-            <button
-              type="button"
-              class="btn-link btn-danger"
-              (click)="onDelete(order)"
-            >
-              Delete
-            </button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    {{ 'ORDERS.LIST.EMPTY' | translate }}
+  </div>
 
-  <!-- Empty state -->
-  <div *ngIf="!loading && !error && orders.length === 0" class="empty-state">
-    <p>No orders found.</p>
+  <!-- Table with orders -->
+  <div class="table-wrapper" *ngIf="!loading && filteredOrders.length > 0">
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>{{ 'ORDERS.LIST.COL_CODE' | translate }}</th>
+          <th>{{ 'ORDERS.LIST.COL_CUSTOMER' | translate }}</th>
+          <th>{{ 'ORDERS.LIST.COL_STATUS' | translate }}</th>
+          <th class="numeric">
+            {{ 'ORDERS.LIST.COL_TOTAL' | translate }}
+          </th>
+          <th>{{ 'ORDERS.LIST.COL_CREATED' | translate }}</th>
+          <th class="actions">
+            {{ 'ORDERS.LIST.COL_ACTIONS' | translate }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of filteredOrders">
+          <td>{{ order.code }}</td>
+          <td>{{ order.customerName || '—' }}</td>
+          <td>
+            <span
+              class="status-pill"
+              [ngClass]="'status_' + (order.status || 'UNKNOWN')"
+            >
+              {{
+                ('ORDERS.STATUS.' + (order.status || 'UNKNOWN'))
+                  | translate
+              }}
+            </span>
+          </td>
+          <td class="numeric">
+            {{ order.total | number: '1.2-2' }}
+          </td>
+          <td>
+            {{ order.createdAt || '—' }}
+          </td>
+          <td class="actions">
+            <div class="action-buttons">
+              <button
+                type="button"
+                class="btn-link"
+                (click)="onView(order)"
+              >
+                {{ 'ORDERS.LIST.BUTTON_VIEW' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn-link"
+                (click)="onEdit(order)"
+              >
+                {{ 'ORDERS.LIST.BUTTON_EDIT' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn-link btn-danger"
+                (click)="onDelete(order)"
+              >
+                {{ 'ORDERS.LIST.BUTTON_DELETE' | translate }}
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>

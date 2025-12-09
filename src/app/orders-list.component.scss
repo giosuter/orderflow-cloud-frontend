@@ -1,239 +1,233 @@
-/* src/app/orders-list.component.scss */
+/* 
+ * Layout & styling for the main Orders page.
+ * No @extend from global styles to avoid Sass scope issues.
+ */
 
-/* Overall page container */
 .orders-page {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #222;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-/* Header row (title + primary button) */
+/* Header: title + actions aligned nicely */
 .orders-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 
-  h1 {
-    margin: 0;
-    font-size: 1.8rem;
-    font-weight: 600;
+  .title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    h1 {
+      margin: 0;
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #6b7280; // grey-500
+    }
   }
 
-  .subtitle {
-    margin: 0.2rem 0 0;
-    font-size: 0.9rem;
-    color: #555;
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 }
 
-/* -------------------- Buttons -------------------- */
+/* Generic button styles (no Material) */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.45rem 0.9rem;
-  border-radius: 4px;
+  border-radius: 999px;
   border: 1px solid transparent;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  background-color: #e0e0e0;
-  color: #222;
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  background-color: #e5e7eb; // gray-200
+  color: #111827;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #d1d5db; // gray-300
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: default;
   }
 }
 
 .btn-primary {
-  background-color: #1976d2;
-  color: #fff;
-  border-color: #1565c0;
+  background-color: #2563eb; // blue-600
+  border-color: #1d4ed8;
+  color: #ffffff;
 
   &:hover:not(:disabled) {
-    background-color: #1565c0;
+    background-color: #1d4ed8;
   }
 
   &:active:not(:disabled) {
-    background-color: #0d47a1;
+    background-color: #1e40af;
   }
 }
 
-.btn-secondary {
-  background-color: #555;
-  color: #fff;
-  border-color: #444;
+.btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: #374151;
 
   &:hover:not(:disabled) {
-    background-color: #444;
-  }
-
-  &:active:not(:disabled) {
-    background-color: #333;
+    background-color: #e5e7eb;
   }
 }
 
-/* Link-style buttons (used in Actions column) */
-.action-buttons {
-  display: flex;
-  gap: 0.75rem; /* spacing between buttons */
-  align-items: center;
-}
-
-.btn-link {
-  background: none;
-  border: none;
-  color: #0366d6;
-  cursor: pointer;
-  text-decoration: underline;
-  font-size: 0.9rem;
-  padding: 0.25rem 0.4rem;
-}
-
-.btn-link:hover {
-  color: #024f9c;
-}
-
-.btn-danger {
-  color: #d63434;
-  font-weight: 500;
-}
-
-.btn-danger:hover {
-  color: #b82a2a;
-  text-decoration: underline;
-}
-
-.actions {
-  min-width: 180px;
-}
-
-/* -------------------- Alerts / info messages -------------------- */
+/* Alerts / info messages */
 
 .alert {
   padding: 0.75rem 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.25rem;
   font-size: 0.95rem;
-}
-
-.alert-error {
-  background-color: #ffebee;
-  border: 1px solid #e57373;
-  color: #c62828;
-}
-
-.loading-text,
-.empty-text,
-.loading-state,
-.empty-state {
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
-  color: #555;
-}
-
-/* -------------------- Filter / search panel -------------------- */
-
-/* Wrapper around the search form (code + status + buttons) */
-.filters-panel {
-  background: #f7f7f7;
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-}
-
-/* Flex layout for the filter form */
-.filters-form {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-end;
-}
-
-/* Single filter field (label + input/select) */
-.filter-field {
-  display: flex;
-  flex-direction: column;
-  min-width: 180px;
-
-  label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-bottom: 0.2rem;
-  }
-
-  input,
-  select {
-    padding: 0.35rem 0.5rem;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    font-size: 0.95rem;
-  }
-
-  input[type='text'] {
-    max-width: 260px;
-  }
-}
-
-/* Container for Search / Reset buttons in the filter bar */
-.filter-actions {
-  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
-/* Legacy .filter-bar kept for compatibility; not used by new HTML
-   but harmless if present. */
-.filter-bar {
+.alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+/* Filters + search area inside a card */
+
+.filter-card {
+  background: #ffffff;
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  box-shadow:
+    0 10px 15px -3px rgba(15, 23, 42, 0.08),
+    0 4px 6px -4px rgba(15, 23, 42, 0.05);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 1rem;
-  font-size: 0.95rem;
+}
+
+.filters-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.filters-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 180px;
 
   label {
     font-weight: 500;
+    color: #4b5563;
   }
 
-  input[type='text'] {
-    flex: 1;
-    max-width: 260px;
-    padding: 0.35rem 0.5rem;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    font-size: 0.95rem;
+  input[type='text'],
+  select {
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    font-size: 0.9rem;
+    min-width: 0;
+
+    &:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: 1px;
+      border-color: #2563eb;
+    }
   }
 }
 
-/* -------------------- Table styling -------------------- */
+/* Buttons on right side of filter row */
+
+.filters-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Loading / empty texts below table */
+
+.loading-text,
+.empty-text {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  color: #6b7280;
+}
+
+/* Table card */
+
+.table-card {
+  background: #ffffff;
+  border-radius: 0.75rem;
+  padding: 0.25rem 0.5rem 0.75rem;
+  box-shadow:
+    0 10px 15px -3px rgba(15, 23, 42, 0.08),
+    0 4px 6px -4px rgba(15, 23, 42, 0.05);
+}
 
 .table-wrapper {
-  margin-top: 0.75rem;
-  border-radius: 6px;
+  margin-top: 0.25rem;
+  border-radius: 0.5rem;
   overflow: hidden;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e5e7eb;
 }
+
+/* Orders table */
 
 .orders-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 
   thead {
-    background-color: #f5f5f5;
+    background-color: #f9fafb;
   }
 
   th,
   td {
     padding: 0.6rem 0.75rem;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #e5e7eb;
     white-space: nowrap;
+  }
+
+  th {
+    font-weight: 600;
+    color: #4b5563;
   }
 
   th.numeric,
@@ -242,45 +236,107 @@
   }
 
   tbody tr:nth-child(even) {
-    background-color: #fafafa;
+    background-color: #f9fafb;
   }
 
   tbody tr:hover {
-    background-color: #e3f2fd;
+    background-color: #eff6ff;
   }
 }
 
-/* -------------------- Status pills -------------------- */
+/* Status pill */
 
 .status-pill {
   display: inline-block;
-  padding: 0.15rem 0.55rem;
+  padding: 0.1rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-/* Adjust these to your real statuses if needed */
-.status-NEW,
-.status_OPEN {
-  background-color: #e3f2fd;
-  color: #0d47a1;
+.status-NEW {
+  background-color: #dbeafe;
+  color: #1d4ed8;
 }
 
-.status_COMPLETED,
-.status_DONE {
-  background-color: #e8f5e9;
-  color: #1b5e20;
+.status_PAID {
+  background-color: #dcfce7;
+  color: #15803d;
 }
 
 .status_CANCELLED,
 .status_CANCELED {
-  background-color: #ffebee;
-  color: #b71c1c;
+  background-color: #fee2e2;
+  color: #b91c1c;
 }
 
 .status_UNKNOWN {
-  background-color: #f5f5f5;
-  color: #555;
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+/* Action buttons inside table cell */
+
+.actions {
+  min-width: 190px;
+}
+
+.action-buttons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* Link-style buttons */
+
+.btn-link {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 999px;
+
+  &:hover:not(:disabled) {
+    background-color: #eff6ff;
+    text-decoration: underline;
+  }
+}
+
+.btn-danger {
+  color: #dc2626;
+
+  &:hover:not(:disabled) {
+    background-color: #fef2f2;
+    color: #b91c1c;
+  }
+}
+
+/* Responsive tweaks */
+
+@media (max-width: 768px) {
+  .orders-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .header-actions {
+      align-self: stretch;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+  }
+
+  .filters-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    padding: 0.45rem 0.5rem;
+  }
 }
