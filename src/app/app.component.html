@@ -1,22 +1,41 @@
-<header class="app-header">
-  <div class="app-header-main">
-    <h1>OrderFlow Cloud</h1>
-    <p class="app-subtitle">Order management frontend</p>
-  </div>
+<div class="app-shell">
+  <!-- Top bar with title, navigation and language switch -->
+  <header class="app-header">
+    <div class="brand">
+      <h1>{{ 'APP.TITLE' | translate }}</h1>
+      <p class="subtitle">{{ 'APP.SUBTITLE' | translate }}</p>
+    </div>
 
-  <nav class="app-nav">
-    <!-- We only have one route now, but we keep the structure ready -->
-    <a
-      routerLink="/orders"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }"
-    >
-      Orders
-    </a>
-  </nav>
-</header>
+    <nav class="app-nav">
+      <!-- Simple "Orders" link -->
+      <a routerLink="/orders" routerLinkActive="active">
+        {{ 'NAV.ORDERS' | translate }}
+      </a>
 
-<main class="app-content">
-  <!-- All routed pages (e.g. /orders) appear here -->
-  <router-outlet></router-outlet>
-</main>
+      <!-- Language switch (EN / DE) -->
+      <div class="lang-switch">
+        <button
+          type="button"
+          class="lang-btn"
+          [class.active]="currentLang === 'en'"
+          (click)="switchLang('en')"
+        >
+          {{ 'NAV.LANG_EN' | translate }}
+        </button>
+        <button
+          type="button"
+          class="lang-btn"
+          [class.active]="currentLang === 'de'"
+          (click)="switchLang('de')"
+        >
+          {{ 'NAV.LANG_DE' | translate }}
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main content: all pages go here via routing -->
+  <main class="app-main">
+    <router-outlet></router-outlet>
+  </main>
+</div>

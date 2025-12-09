@@ -1,49 +1,71 @@
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 2rem;
-  border-bottom: 1px solid #ddd;
-  background-color: #f7f7f7;
-
-  .app-header-main {
-    h1 {
-      margin: 0;
-      font-size: 1.4rem;
-      font-weight: 600;
-    }
-
-    .app-subtitle {
-      margin: 0.15rem 0 0;
-      font-size: 0.9rem;
-      color: #555;
-    }
-  }
-
-  .app-nav {
-    display: flex;
-    gap: 1rem;
-
-    a {
-      text-decoration: none;
-      font-size: 0.95rem;
-      color: #333;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      transition: background-color 0.15s ease, color 0.15s ease;
-
-      &:hover {
-        background-color: #e5e5e5;
-      }
-
-      &.active {
-        background-color: #333;
-        color: #fff;
-      }
-    }
-  }
+.app-shell {
+  min-height: 100vh;
+  background-color: #f5f5f5;
 }
 
-.app-content {
-  padding: 1.5rem 2rem;
+/* Top bar */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.5rem;
+  background-color: #1976d2;
+  color: #fff;
+}
+
+.app-header .brand h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.app-header .brand .subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* Navigation + language switcher */
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-nav a {
+  color: #e3f2fd;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.app-nav a.active {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Language switch pill */
+.lang-switch {
+  display: inline-flex;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.15);
+  padding: 2px;
+}
+
+.lang-btn {
+  border: none;
+  background: transparent;
+  color: #e3f2fd;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.lang-btn.active {
+  background-color: #fff;
+  color: #1976d2;
+  border-radius: 999px;
+}
+
+/* Main content */
+.app-main {
+  padding: 1.5rem;
 }
