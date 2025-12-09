@@ -2,15 +2,10 @@
   <header class="orders-header">
     <div>
       <h1>Orders</h1>
-      <p class="subtitle">Order management frontend</p>
+      <p class="subtitle">Overview of all orders in OrderFlow Cloud</p>
     </div>
 
-    <!-- Now active: go to /orders/new -->
-    <button
-      type="button"
-      class="btn btn-primary"
-      [routerLink]="['/orders/new']"
-    >
+    <button type="button" class="btn btn-primary" (click)="onCreate()">
       + New order
     </button>
   </header>
@@ -19,76 +14,54 @@
     {{ error }}
   </div>
 
-  <div class="filter-bar">
-    <label for="codeFilter">Filter by code:</label>
-    <input
-      id="codeFilter"
-      type="text"
-      [(ngModel)]="filterCode"
-      (ngModelChange)="applyFilters()"
-      placeholder="e.g. ORD-2025"
-    />
-
-    <label for="statusFilter">Status:</label>
-    <select
-      id="statusFilter"
-      [(ngModel)]="filterStatus"
-      (ngModelChange)="applyFilters()"
-    >
-      <option [ngValue]="null">All</option>
-      <option *ngFor="let s of statusOptions" [ngValue]="s">
-        {{ s }}
-      </option>
-    </select>
-  </div>
-
-  <div *ngIf="loading" class="loading-text">
+  <div *ngIf="loading" class="loading">
     Loading orders…
   </div>
 
-  <div *ngIf="!loading && filteredOrders.length === 0" class="empty-text">
-    No orders found.
-  </div>
+  <table *ngIf="!loading && orders.length > 0" class="orders-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Code</th>
+        <th>Customer</th>
+        <th>Status</th>
+        <th>Total</th>
+        <th>Created at</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
 
-  <div *ngIf="!loading && filteredOrders.length > 0" class="table-wrapper">
-    <table class="orders-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Code</th>
-          <th>Status</th>
-          <th>Customer</th>
-          <th class="numeric">Total</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let order of filteredOrders">
-          <td>{{ order.id }}</td>
-          <td>{{ order.code }}</td>
-          <td>
-            <span
-              class="status-pill"
-              [ngClass]="'status_' + (order.status || 'UNKNOWN')"
-            >
-              {{ order.status || 'UNKNOWN' }}
-            </span>
-          </td>
-          <td>{{ order.customerName }}</td>
-          <td class="numeric">
-            {{ order.total | number: '1.2-2' }}
-          </td>
-          <td>
-            <button
-              type="button"
-              class="btn"
-              [routerLink]="['/orders', order.id]"
-            >
-              Details
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <tbody>
+      <tr *ngFor="let order of orders">
+        <td>{{ order.id }}</td>
+        <td>{{ order.code }}</td>
+        <td>{{ order.customerName || '—' }}</td>
+        <td>{{ order.status || '—' }}</td>
+        <td>{{ order.total | number: '1.2-2' }}</td>
+        <td>{{ order.createdAt || '—' }}</td>
+<td class="actions">
+  <div class="action-buttons">
+    <button type="button" class="btn-link" (click)="onView(order)">
+      View
+    </button>
+
+    <button type="button" class="btn-link" (click)="onEdit(order)">
+      Edit
+    </button>
+
+    <button
+      type="button"
+      class="btn-link btn-danger"
+      (click)="onDelete(order)">
+      Delete
+    </button>
   </div>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="!loading && orders.length === 0" class="empty-state">
+    No orders found. Create the first one using the button above.
+  </p>
 </div>
