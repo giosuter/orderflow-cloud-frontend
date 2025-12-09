@@ -1,8 +1,9 @@
 <div class="orders-page">
+  <!-- Header with title + New order button -->
   <header class="orders-header">
     <div>
       <h1>Orders</h1>
-      <p class="subtitle">Overview of all orders in OrderFlow Cloud</p>
+      <p class="subtitle">Manage your orders in OrderFlow Cloud</p>
     </div>
 
     <button type="button" class="btn btn-primary" (click)="onCreate()">
@@ -10,58 +11,111 @@
     </button>
   </header>
 
+  <!-- Filters / search bar -->
+  <section class="filters-panel">
+    <form (ngSubmit)="onSearch()" class="filters-form">
+      <div class="filter-field">
+        <label for="filterCode">Code</label>
+        <input
+          id="filterCode"
+          name="filterCode"
+          type="text"
+          [(ngModel)]="filterCode"
+          placeholder="e.g. ORD-1001"
+        />
+      </div>
+
+      <div class="filter-field">
+        <label for="filterStatus">Status</label>
+        <select
+          id="filterStatus"
+          name="filterStatus"
+          [(ngModel)]="filterStatus"
+        >
+          <option [ngValue]="''">All</option>
+          <option *ngFor="let s of statusOptions" [ngValue]="s">
+            {{ s }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button
+          type="submit"
+          class="btn btn-secondary"
+          [disabled]="loading"
+        >
+          Search
+        </button>
+        <button
+          type="button"
+          class="btn"
+          (click)="onResetFilters()"
+          [disabled]="loading"
+        >
+          Reset
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Error message -->
   <div *ngIf="error" class="alert alert-error">
     {{ error }}
   </div>
 
-  <div *ngIf="loading" class="loading">
+  <!-- Loading indicator -->
+  <div *ngIf="loading && !error" class="loading-state">
     Loading orders…
   </div>
 
-  <table *ngIf="!loading && orders.length > 0" class="orders-table">
+  <!-- Orders table -->
+  <table
+    *ngIf="!loading && !error && orders.length > 0"
+    class="orders-table"
+  >
     <thead>
       <tr>
         <th>ID</th>
         <th>Code</th>
-        <th>Customer</th>
         <th>Status</th>
+        <th>Customer</th>
         <th>Total</th>
-        <th>Created at</th>
-        <th>Actions</th>
+        <th>Created</th>
+        <th class="actions">Actions</th>
       </tr>
     </thead>
-
     <tbody>
       <tr *ngFor="let order of orders">
         <td>{{ order.id }}</td>
         <td>{{ order.code }}</td>
-        <td>{{ order.customerName || '—' }}</td>
         <td>{{ order.status || '—' }}</td>
-        <td>{{ order.total | number: '1.2-2' }}</td>
+        <td>{{ order.customerName || '—' }}</td>
+        <td>{{ order.total | number : '1.2-2' }}</td>
         <td>{{ order.createdAt || '—' }}</td>
-<td class="actions">
-  <div class="action-buttons">
-    <button type="button" class="btn-link" (click)="onView(order)">
-      View
-    </button>
-
-    <button type="button" class="btn-link" (click)="onEdit(order)">
-      Edit
-    </button>
-
-    <button
-      type="button"
-      class="btn-link btn-danger"
-      (click)="onDelete(order)">
-      Delete
-    </button>
-  </div>
-</td>
+        <td class="actions">
+          <div class="action-buttons">
+            <button type="button" class="btn-link" (click)="onView(order)">
+              View
+            </button>
+            <button type="button" class="btn-link" (click)="onEdit(order)">
+              Edit
+            </button>
+            <button
+              type="button"
+              class="btn-link btn-danger"
+              (click)="onDelete(order)"
+            >
+              Delete
+            </button>
+          </div>
+        </td>
       </tr>
     </tbody>
   </table>
 
-  <p *ngIf="!loading && orders.length === 0" class="empty-state">
-    No orders found. Create the first one using the button above.
-  </p>
+  <!-- Empty state -->
+  <div *ngIf="!loading && !error && orders.length === 0" class="empty-state">
+    <p>No orders found.</p>
+  </div>
 </div>
