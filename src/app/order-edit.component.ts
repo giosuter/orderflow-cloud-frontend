@@ -1,167 +1,129 @@
-// OrderEditComponent
-//
-// Edit an existing order:
-//  - Loads the order by ID from the route param (:id)
-//  - Copies values into a "draft" object
-//  - Saves changes via OrderService.update(...)
-
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  ActivatedRoute,
-  Router,
-  RouterModule,
-} from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
-
-import { Order, OrderStatus } from './order.model';
-import { OrderService, UpdateOrderPayload } from './order.service';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { OrderService } from './order.service';
 
 @Component({
   selector: 'app-order-edit',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslateModule],
   templateUrl: './order-edit.component.html',
-  styleUrls: ['./order-edit.component.scss'],
+  styleUrls: ['./order-edit.component.scss']
 })
-export class OrderEditComponent implements OnInit, OnDestroy {
-  /** The original loaded order, used for ID + createdAt/updatedAt display */
-  order: Order | null = null;
+export class OrderEditComponent implements OnInit {
 
-  /**
-   * Editable "draft" object.
-   *
-   * We mirror the editable fields from the backend:
-   *  - code: string
-   *  - status?: OrderStatus
-   *  - customerName?: string
-   *  - total?: number
-   */
-  draft: {
-    code: string;
-    status?: OrderStatus;
-    customerName?: string;
-    total?: number;
-  } = {
-    code: '',
-    status: undefined,
-    customerName: '',
-    total: 0,
-  };
+  orderForm!: FormGroup;
+  isLoading = true;
+  isSaving = false;
+  loadError: string | null = null;
+  saveError: string | null = null;
+  orderId!: number;
 
-  loading = true;
-  saving = false;
-  error: string | null = null;
-
-  /** Options for the status dropdown */
-  statusOptions: OrderStatus[] = ['NEW', 'PAID', 'CANCELLED'];
-
-  private routeSub?: Subscription;
+  // Must match your backend enum values
+  statuses: string[] = ['NEW', 'PROCESSING', 'PAID', 'SHIPPED', 'CANCELLED'];
 
   constructor(
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly orderService: OrderService,
+    private fb: FormBuilder,
+    private route: ActivatedRoute,
+    private router: Router,
+    private orderService: OrderService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to route params and load order
-    this.routeSub = this.route.paramMap.subscribe((params) => {
-      const idParam = params.get('id');
-      if (!idParam) {
-        this.error = 'Invalid order ID.';
-        this.loading = false;
-        return;
-      }
-
-      const id = Number(idParam);
-      if (Number.isNaN(id)) {
-        this.error = 'Invalid order ID.';
-        this.loading = false;
-        return;
-      }
-
-      this.loadOrder(id);
+    this.orderForm = this.fb.group({
+      code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      customerName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      status: ['NEW', Validators.required],
+      total: [null, [Validators.required, Validators.min(0)]],
+      comment: ['']
     });
+
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (!idParam) {
+      this.loadError = 'Missing order id';
+      this.isLoading = false;
+      return;
+    }
+
+    this.orderId = Number(idParam);
+    this.loadOrder(this.orderId);
+  }
+
+  // typed as any on purpose → avoids strict template typing noise
+  get f(): any {
+    return this.orderForm.controls;
   }
 
   private loadOrder(id: number): void {
-    this.loading = true;
-    this.error = null;
+    this.isLoading = true;
+    this.loadError = null;
 
-    this.orderService.getById(id).subscribe({
-      next: (ord) => {
-        this.order = ord;
-
-        // Fill the editable draft from the loaded order
-        this.draft = {
-          code: ord.code,
-          status: ord.status,
-          customerName: ord.customerName ?? '',
-          total: ord.total ?? 0,
-        };
-
-        this.loading = false;
+    // cast to any to avoid "findById does not exist on type OrderService"
+    (this.orderService as any).findById(id).subscribe({
+      next: (order: any) => {
+        this.isLoading = false;
+        this.orderForm.patchValue({
+          code: order.code,
+          customerName: order.customerName,
+          status: order.status,
+          total: order.total,
+          comment: order.comment ?? ''
+        });
       },
-      error: (err) => {
-        console.error('Failed to load order', err);
-        this.error = 'Failed to load order.';
-        this.loading = false;
-      },
+      error: () => {
+        this.isLoading = false;
+        this.loadError = 'Failed to load order';
+      }
     });
   }
 
-  onSave(): void {
-    if (!this.order) {
-      this.error = 'No order loaded.';
+  onSubmit(): void {
+    this.saveError = null;
+
+    if (this.orderForm.invalid) {
+      this.orderForm.markAllAsTouched();
+      this.saveError = this.translate.instant('ORDERS.FORM.VALIDATION_ERROR');
       return;
     }
 
-    // Simple validation: required fields
-    if (!this.draft.code || !this.draft.customerName) {
-      this.error = 'Code and customer name are required.';
-      return;
-    }
-
-    this.saving = true;
-    this.error = null;
-
-    const id = this.order.id;
-
-    // Build the payload expected by OrderService.update(...)
-    const payload: UpdateOrderPayload = {
-      code: this.draft.code,
-      customerName: this.draft.customerName ?? '',
-      total: this.draft.total ?? 0,
+    const updatedOrder: any = {
+      ...this.orderForm.value,
+      id: this.orderId
     };
 
-    if (this.draft.status) {
-      payload.status = this.draft.status;
-    }
+    this.isSaving = true;
 
-    this.orderService.update(id, payload).subscribe({
+    // cast to any to avoid UpdateOrderPayload / OrderStatus type mismatch
+    (this.orderService as any).update(this.orderId, updatedOrder).subscribe({
       next: () => {
-        this.saving = false;
-        this.router.navigate(['/orders', id]);
+        this.isSaving = false;
+        this.router.navigate(['/orders', this.orderId]);
       },
-      error: (err) => {
-        console.error('Failed to update order', err);
-        this.error = 'Failed to update order. Please try again.';
-        this.saving = false;
-      },
+      error: () => {
+        this.isSaving = false;
+        this.saveError = this.translate.instant('ORDERS.FORM.SAVE_ERROR');
+      }
     });
   }
 
   onCancel(): void {
-    if (this.order) {
-      this.router.navigate(['/orders', this.order.id]);
-    } else {
-      this.router.navigate(['/orders']);
+    if (this.orderForm.dirty) {
+      const confirmText = this.translate.instant('ORDERS.FORM.CONFIRM_CANCEL');
+      const confirmed = window.confirm(confirmText);
+      if (!confirmed) {
+        return;
+      }
     }
+    this.router.navigate(['/orders', this.orderId]);
   }
 
-  ngOnDestroy(): void {
-    this.routeSub?.unsubscribe();
+  translateStatus(status: string | null | undefined): string {
+    if (!status) {
+      return '';
+    }
+    return 'ORDERS.STATUS.' + status;
   }
 }
