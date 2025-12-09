@@ -1,0 +1,103 @@
+{
+  "ORDERS": {
+    "LIST": {
+      "TITLE": "Orders",
+      "SUBTITLE": "Manage incoming and existing orders",
+
+      "BUTTON_NEW": "New order",
+
+      "FILTER_LABEL": "Filter",
+      "FILTER_CODE_LABEL": "Code",
+      "FILTER_CODE_PLACEHOLDER": "Filter by order code",
+      "FILTER_STATUS_LABEL": "Status",
+      "FILTER_STATUS_ALL": "All statuses",
+      "BUTTON_APPLY": "Apply",
+      "BUTTON_RESET": "Reset",
+
+      "LOADING": "Loading orders...",
+      "EMPTY": "No orders found.",
+
+      "COL_CODE": "Code",
+      "COL_CUSTOMER": "Customer",
+      "COL_STATUS": "Status",
+      "COL_TOTAL": "Total",
+      "COL_CREATED": "Created at",
+      "COL_ACTIONS": "Actions",
+
+      "BUTTON_VIEW": "View",
+      "BUTTON_EDIT": "Edit",
+      "BUTTON_DELETE": "Delete"
+    },
+
+    "DETAILS": {
+      "TITLE": "Order details",
+      "SUBTITLE": "Detailed information for the selected order",
+      "SECTION_MAIN": "Main information",
+      "FIELD_ID": "ID",
+      "FIELD_CODE": "Code",
+      "FIELD_STATUS": "Status",
+      "FIELD_CUSTOMER_NAME": "Customer",
+      "FIELD_TOTAL": "Total",
+      "FIELD_CREATED_AT": "Created at",
+      "FIELD_UPDATED_AT": "Updated at"
+    },
+
+    "FORM": {
+      "TITLE_NEW": "New order",
+      "SUBTITLE_NEW": "Create a new order",
+      "TITLE_EDIT": "Edit order",
+      "SUBTITLE_EDIT": "Update existing order",
+      "VALIDATION_ERROR": "Please fix the highlighted fields.",
+      "SAVE_ERROR": "Saving the order failed.",
+      "CONFIRM_CANCEL": "Discard your changes?"
+    },
+
+    "FIELDS": {
+      "CODE": "Order code",
+      "CUSTOMER_NAME": "Customer name",
+      "STATUS": "Status",
+      "TOTAL": "Total",
+      "COMMENT": "Comment"
+    },
+
+    "PLACEHOLDERS": {
+      "CODE": "Enter order code",
+      "CUSTOMER_NAME": "Enter customer name",
+      "STATUS": "Select a status",
+      "TOTAL": "0.00",
+      "COMMENT": "Optional comment"
+    },
+
+    "VALIDATION": {
+      "REQUIRED": "This field is required.",
+      "MIN_LENGTH": "Minimum length is {{ min }} characters.",
+      "MAX_LENGTH": "Maximum length is {{ max }} characters.",
+      "MIN_VALUE": "Minimum value is {{ min }}."
+    },
+
+    "STATUS": {
+      "NEW": "New",
+      "PROCESSING": "Processing",
+      "PAID": "Paid",
+      "SHIPPED": "Shipped",
+      "CANCELLED": "Cancelled",
+      "UNKNOWN": "Unknown"
+    },
+
+    "ACTIONS": {
+      "NEW": "New order",
+      "DETAILS": "Details",
+      "EDIT": "Edit",
+      "DELETE": "Delete",
+      "SAVE": "Save",
+      "CANCEL": "Cancel",
+      "BACK": "Back",
+      "REFRESH": "Refresh"
+    }
+  },
+  "NAV": {
+    "ORDERS": "Orders",
+    "LANG_EN": "English",
+    "LANG_DE": "German"
+  }
+}

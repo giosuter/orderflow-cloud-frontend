@@ -1,0 +1,104 @@
+{
+  "ORDERS": {
+    "LIST": {
+      "TITLE": "Bestellungen",
+      "SUBTITLE": "Eingehende und bestehende Bestellungen verwalten",
+
+      "BUTTON_NEW": "Neue Bestellung",
+
+      "FILTER_LABEL": "Filter",
+      "FILTER_CODE_LABEL": "Code",
+      "FILTER_CODE_PLACEHOLDER": "Nach Bestellcode filtern",
+      "FILTER_STATUS_LABEL": "Status",
+      "FILTER_STATUS_ALL": "Alle Status",
+      "BUTTON_APPLY": "Anwenden",
+      "BUTTON_RESET": "Zurücksetzen",
+
+      "LOADING": "Bestellungen werden geladen...",
+      "EMPTY": "Keine Bestellungen gefunden.",
+
+      "COL_CODE": "Code",
+      "COL_CUSTOMER": "Kunde",
+      "COL_STATUS": "Status",
+      "COL_TOTAL": "Total",
+      "COL_CREATED": "Erstellt am",
+      "COL_ACTIONS": "Aktionen",
+
+      "BUTTON_VIEW": "Details",
+      "BUTTON_EDIT": "Bearbeiten",
+      "BUTTON_DELETE": "Löschen"
+    },
+
+    "DETAILS": {
+      "TITLE": "Bestelldetails",
+      "SUBTITLE": "Detailinformationen zur ausgewählten Bestellung",
+      "SECTION_MAIN": "Hauptinformationen",
+      "FIELD_ID": "ID",
+      "FIELD_CODE": "Code",
+      "FIELD_STATUS": "Status",
+      "FIELD_CUSTOMER_NAME": "Kunde",
+      "FIELD_TOTAL": "Total",
+      "FIELD_CREATED_AT": "Erstellt am",
+      "FIELD_UPDATED_AT": "Aktualisiert am"
+    },
+
+    "FORM": {
+      "TITLE_NEW": "Neue Bestellung",
+      "SUBTITLE_NEW": "Neue Bestellung erstellen",
+      "TITLE_EDIT": "Bestellung bearbeiten",
+      "SUBTITLE_EDIT": "Bestehende Bestellung aktualisieren",
+      "VALIDATION_ERROR": "Bitte korrigiere die markierten Felder.",
+      "SAVE_ERROR": "Das Speichern der Bestellung ist fehlgeschlagen.",
+      "CONFIRM_CANCEL": "Willst Du Deine Änderungen verwerfen?"
+    },
+
+    "FIELDS": {
+      "CODE": "Bestellnummer",
+      "CUSTOMER_NAME": "Kundenname",
+      "STATUS": "Status",
+      "TOTAL": "Total",
+      "COMMENT": "Bemerkung"
+    },
+
+    "PLACEHOLDERS": {
+      "CODE": "Bestellnummer eingeben",
+      "CUSTOMER_NAME": "Kundenname eingeben",
+      "STATUS": "Status auswählen",
+      "TOTAL": "0.00",
+      "COMMENT": "Optionale Bemerkung"
+    },
+
+    "VALIDATION": {
+      "REQUIRED": "Dieses Feld ist obligatorisch.",
+      "MIN_LENGTH": "Die Mindestlänge beträgt {{ min }} Zeichen.",
+      "MAX_LENGTH": "Die Maximallänge beträgt {{ max }} Zeichen.",
+      "MIN_VALUE": "Der Mindestwert ist {{ min }}."
+    },
+
+    "STATUS": {
+      "NEW": "Neu",
+      "PROCESSING": "In Bearbeitung",
+      "PAID": "Bezahlt",
+      "SHIPPED": "Versendet",
+      "CANCELLED": "Storniert",
+      "UNKNOWN": "Unbekannt"
+    },
+
+    "ACTIONS": {
+      "NEW": "Neue Bestellung",
+      "DETAILS": "Details",
+      "EDIT": "Bearbeiten",
+      "DELETE": "Löschen",
+      "SAVE": "Speichern",
+      "CANCEL": "Abbrechen",
+      "BACK": "Zurück",
+      "REFRESH": "Aktualisieren"
+    }
+  },
+    
+  "NAV": {
+    "ORDERS": "Bestellungen",
+    "LANG_EN": "Englisch",
+    "LANG_DE": "Deutsch"
+  }  
+}
