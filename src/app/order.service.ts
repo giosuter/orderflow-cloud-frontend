@@ -92,15 +92,7 @@ export class OrderService {
       { params: httpParams },
     );
   }
-
-  /**
-   * Load a single order by its id.
-   * Maps to GET /api/orders/{id}
-   */
-  getById(id: number): Observable<Order> {
-    return this.http.get<Order>(`${this.baseUrl}/orders/${id}`);
-  }
-
+  
   /**
    * Create a new order.
    * Maps to POST /api/orders
@@ -113,8 +105,8 @@ export class OrderService {
    * Update an existing order.
    * Maps to PUT /api/orders/{id}
    */
-  update(id: number, payload: UpdateOrderPayload): Observable<Order> {
-    return this.http.put<Order>(`${this.baseUrl}/orders/${id}`, payload);
+  update(id: number, payload: any) {
+    return this.http.put<any>(`${this.baseUrl}/orders/${id}`, payload);
   }
 
   /**
@@ -123,5 +115,13 @@ export class OrderService {
    */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/orders/${id}`);
+  }
+
+  /**
+   * Load a single order by its ID.
+   * Used by OrderDetailComponent and OrderEditComponent.
+   */
+  findById(id: number) {
+    return this.http.get<any>(`${this.baseUrl}/orders/${id}`);
   }
 }
