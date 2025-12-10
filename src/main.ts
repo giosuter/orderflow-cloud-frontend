@@ -39,7 +39,7 @@ export class JsonTranslateLoader implements TranslateLoader {
    */
   getTranslation(lang: string): Observable<TranslationObject> {
     // IMPORTANT: backticks, not plain slashes
-    return this.http.get<TranslationObject>(`/assets/i18n/${lang}.json`);
+    return this.http.get<TranslationObject>(`assets/i18n/${lang}.json`);
   }
 }
 

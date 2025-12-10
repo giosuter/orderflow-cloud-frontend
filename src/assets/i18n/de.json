@@ -1,4 +1,9 @@
 {
+    "APP": {
+    "TITLE": "OrderFlow Cloud",
+    "SUBTITLE": "Lightweight order tracking and management"
+  },
+  
   "ORDERS": {
     "LIST": {
       "TITLE": "Bestellungen",
