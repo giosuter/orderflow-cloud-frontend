@@ -1,19 +1,17 @@
+// Path: src/app/order.service.ts
 // Central Angular service for talking to the OrderFlow backend.
-// It provides list/search, load-by-id, create, update and delete.
 //
-// IMPORTANT:
-//  - List all orders:        GET  /orderflow-api/api/orders
-//  - Search with filters:    GET  /orderflow-api/api/orders/search?code=&status=
-//  - Load single order:      GET  /orderflow-api/api/orders/{id}
-//  - Create new order:       POST /orderflow-api/api/orders
-//  - Update existing order:  PUT  /orderflow-api/api/orders/{id}
-//  - Delete order:           DELETE /orderflow-api/api/orders/{id}
+// CURRENT backend contract used by Orders list paging:
+//   GET  /orderflow-api/api/orders/search?customer=&status=&page=&size=
+// Returns OrdersPageResponse (content + pagination metadata)
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
 import { environment } from '../environments/environment';
 import { Order, OrderStatus } from './order.model';
+import { OrdersPageResponse } from './orders-page-response.model';
 
 /**
  * Payload when creating a new order from the UI.
@@ -28,8 +26,6 @@ export interface CreateOrderPayload {
 
 /**
  * Payload when updating an existing order.
- * Same shape as the editable subset of Order,
- * without id / createdAt / updatedAt.
  */
 export interface UpdateOrderPayload {
   code: string;
@@ -39,9 +35,8 @@ export interface UpdateOrderPayload {
 }
 
 /**
- * Parameters for the search endpoint.
- * All fields are optional; if omitted, the backend
- * should treat them as "no filter".
+ * Parameters for the old (non-paged) search endpoint.
+ * Keep only if your backend still supports returning a plain list.
  */
 export interface OrderSearchParams {
   code?: string;
@@ -54,8 +49,7 @@ export interface OrderSearchParams {
 export class OrderService {
   /**
    * Base URL of the backend API.
-   * In dev this should be something like '/orderflow-api/api',
-   * proxied by Angular dev-server; in prod it should hit Tomcat.
+   * Example in prod: '/orderflow-api/api'
    */
   private readonly baseUrl = environment.apiBaseUrl;
 
@@ -70,11 +64,8 @@ export class OrderService {
   }
 
   /**
-   * Search orders via the dedicated backend search endpoint.
-   * Maps to:
-   *   GET /api/orders/search?code=...&status=...
-   *
-   * Only sends query parameters that are actually present.
+   * Old-style search (no pagination). Keep only if backend returns a list.
+   * Maps to GET /api/orders/search?code=...&status=...
    */
   search(params: OrderSearchParams): Observable<Order[]> {
     let httpParams = new HttpParams();
@@ -82,19 +73,56 @@ export class OrderService {
     if (params.code && params.code.trim() !== '') {
       httpParams = httpParams.set('code', params.code.trim());
     }
-
     if (params.status) {
       httpParams = httpParams.set('status', params.status);
     }
 
-    return this.http.get<Order[]>(
-      `${this.baseUrl}/orders/search`,
-      { params: httpParams },
-    );
+    return this.http.get<Order[]>(`${this.baseUrl}/orders/search`, {
+      params: httpParams,
+    });
   }
-  
+
   /**
-   * Create a new order.
+   * Paged search used by the Orders list page.
+   *
+   * IMPORTANT:
+   * Your backend uses query param "customer" as a general term that matches
+   * both code and customerName.
+   */
+  searchPaged(
+    term: string | null,
+    status: OrderStatus | null,
+    page: number,
+    size: number,
+  ): Observable<OrdersPageResponse> {
+    let params = new HttpParams()
+      .set('page', String(page))
+      .set('size', String(size));
+
+    if (term && term.trim() !== '') {
+      params = params.set('customer', term.trim());
+    }
+
+    if (status) {
+      // IMPORTANT: backend expects a string like "NEW"
+      params = params.set('status', status);
+    }
+
+    return this.http.get<OrdersPageResponse>(`${this.baseUrl}/orders/search`, {
+      params,
+    });
+  }
+
+  /**
+   * Load a single order by id.
+   * Maps to GET /api/orders/{id}
+   */
+  findById(id: number): Observable<Order> {
+    return this.http.get<Order>(`${this.baseUrl}/orders/${id}`);
+  }
+
+  /**
+   * Create new order.
    * Maps to POST /api/orders
    */
   create(payload: CreateOrderPayload): Observable<Order> {
@@ -102,26 +130,18 @@ export class OrderService {
   }
 
   /**
-   * Update an existing order.
+   * Update existing order.
    * Maps to PUT /api/orders/{id}
    */
-  update(id: number, payload: any) {
-    return this.http.put<any>(`${this.baseUrl}/orders/${id}`, payload);
+  update(id: number, payload: UpdateOrderPayload): Observable<Order> {
+    return this.http.put<Order>(`${this.baseUrl}/orders/${id}`, payload);
   }
 
   /**
-   * Delete an order by id.
+   * Delete order by id.
    * Maps to DELETE /api/orders/{id}
    */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/orders/${id}`);
-  }
-
-  /**
-   * Load a single order by its ID.
-   * Used by OrderDetailComponent and OrderEditComponent.
-   */
-  findById(id: number) {
-    return this.http.get<any>(`${this.baseUrl}/orders/${id}`);
   }
 }

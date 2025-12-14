@@ -1,3 +1,4 @@
+<!-- src/app/orders-list.component.html -->
 <div class="orders-page">
   <!-- Header with title and "New order" button -->
   <header class="orders-header">
@@ -22,7 +23,7 @@
       {{ 'ORDERS.LIST.FILTER_LABEL' | translate }}
     </span>
 
-    <!-- Code filter -->
+    <!-- Code filter (used as free-text for customer name) -->
     <label for="codeFilter">
       {{ 'ORDERS.LIST.FILTER_CODE_LABEL' | translate }}
     </label>
@@ -143,5 +144,57 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination bar -->
+    <div class="pagination-bar">
+      <div class="pagination-info">
+        <!-- You can later i18n these texts if you want -->
+        <span *ngIf="totalElements > 0">
+          Showing {{ fromIndex }}–{{ toIndex }} of {{ totalElements }} orders
+          (page {{ page + 1 }} of {{ totalPages }})
+        </span>
+        <span *ngIf="totalElements === 0">
+          No orders to display.
+        </span>
+      </div>
+
+      <div class="pagination-controls">
+        <button
+          type="button"
+          class="btn"
+          (click)="goToFirstPage()"
+          [disabled]="!hasPreviousPage"
+        >
+          « First
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          (click)="goToPreviousPage()"
+          [disabled]="!hasPreviousPage"
+        >
+          ‹ Previous
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          (click)="goToNextPage()"
+          [disabled]="!hasNextPage"
+        >
+          Next ›
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          (click)="goToLastPage()"
+          [disabled]="!hasNextPage"
+        >
+          Last »
+        </button>
+      </div>
+    </div>
   </div>
 </div>

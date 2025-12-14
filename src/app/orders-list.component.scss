@@ -339,4 +339,24 @@
   .orders-table td {
     padding: 0.45rem 0.5rem;
   }
+
+  /* Example styling, optional */
+  .pagination-bar {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .pagination-info {
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
+  .pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+  }
 }

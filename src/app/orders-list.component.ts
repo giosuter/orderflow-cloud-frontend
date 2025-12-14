@@ -1,17 +1,32 @@
+// Path: src/app/orders-list.component.ts
+//
 // OrdersListComponent
-// - Loads all orders from the backend
-// - Provides simple client-side filtering by code + status
-// - Integrates i18n labels via ngx-translate
-// - Offers navigation to view, edit and create pages
+// - Uses the paged backend endpoint (OrdersPageResponse)
+// - Provides pagination controls
+// - Uses ngx-translate for labels
+//
+// IMPORTANT behavior fix:
+// Angular may reuse this component instance when navigating back from
+// /orders/:id or /orders/:id/edit. In that case ngOnInit() might NOT re-run,
+// so the list would still show stale data.
+// We therefore listen to Router NavigationEnd events and reload the current page
+// whenever we land on "/orders".
+//
+// IMPORTANT template compatibility:
+// Your HTML currently calls goToFirstPage/goToPreviousPage/goToNextPage/goToLastPage
+// and reads hasPreviousPage/hasNextPage/fromIndex/toIndex.
+// We provide these methods/properties so the template compiles.
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { Subscription, filter } from 'rxjs';
 
 import { Order, OrderStatus } from './order.model';
 import { OrderService } from './order.service';
+import { OrdersPageResponse } from './orders-page-response.model';
 
 @Component({
   selector: 'app-orders-list',
@@ -20,23 +35,31 @@ import { OrderService } from './order.service';
   templateUrl: './orders-list.component.html',
   styleUrls: ['./orders-list.component.scss'],
 })
-export class OrdersListComponent implements OnInit {
-  /** All orders loaded from the backend. */
+export class OrdersListComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
 
-  /** Orders after applying filters (bound to the UI). */
-  filteredOrders: Order[] = [];
-
-  /** Simple loading + error flags. */
   loading = false;
   error: string | null = null;
 
-  /** Filter fields bound to the template. */
+  // Your filter input in HTML uses [(ngModel)]="filterCode" and [(ngModel)]="filterStatus"
+  // Keep those names to match the template.
   filterCode = '';
   filterStatus: '' | OrderStatus = '';
 
-  /** Status options for the status filter dropdown (no empty here). */
-  statusOptions: OrderStatus[] = ['NEW', 'PAID', 'SHIPPED', 'CANCELLED'];
+  statusOptions: OrderStatus[] = [
+    'NEW',
+    'PROCESSING',
+    'PAID',
+    'SHIPPED',
+    'CANCELLED',
+  ];
+
+  page = 0;
+  size = 5;
+  totalPages = 0;
+  totalElements = 0;
+
+  private routerSub?: Subscription;
 
   constructor(
     private readonly orderService: OrderService,
@@ -44,90 +67,70 @@ export class OrdersListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadOrders();
+    this.loadPage(0);
+
+    this.routerSub = this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => {
+        const url = e.urlAfterRedirects || e.url;
+        if (url === '/orders' || url.startsWith('/orders?')) {
+          this.loadPage(this.page);
+        }
+      });
   }
 
-  /**
-   * Load orders from the backend API.
-   */
-  private loadOrders(): void {
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
+
+  loadPage(page: number): void {
     this.loading = true;
     this.error = null;
 
-    this.orderService.getAll().subscribe({
-      next: (orders) => {
-        this.orders = orders;
-        this.applyFilters();
+    const term =
+      this.filterCode.trim() === '' ? null : this.filterCode.trim();
+    const status =
+      this.filterStatus === '' ? null : this.filterStatus;
+
+    this.orderService.searchPaged(term, status, page, this.size).subscribe({
+      next: (res: OrdersPageResponse) => {
+        this.orders = res.content;
+        this.page = res.page;
+        this.size = res.size;
+        this.totalPages = res.totalPages;
+        this.totalElements = res.totalElements;
         this.loading = false;
       },
-      error: (err) => {
-        console.error('Failed to load orders', err);
+      error: (err: unknown) => {
+        console.error('Failed to load orders page', err);
         this.error = 'Failed to load orders.';
         this.loading = false;
       },
     });
   }
 
-  /**
-   * Apply the current filterCode + filterStatus to the in-memory list.
-   */
-  private applyFilters(): void {
-    const term = this.filterCode.trim().toLowerCase();
-    const statusFilter = this.filterStatus;
-
-    this.filteredOrders = this.orders.filter((order) => {
-      const matchesCode =
-        !term ||
-        (order.code ?? '').toLowerCase().includes(term) ||
-        (order.customerName ?? '').toLowerCase().includes(term);
-
-      const matchesStatus =
-        !statusFilter || order.status === statusFilter;
-
-      return matchesCode && matchesStatus;
-    });
-  }
-
-  /**
-   * Called when the filter form is submitted.
-   */
   onSearch(): void {
-    this.applyFilters();
+    this.loadPage(0);
   }
 
-  /**
-   * Reset filters to their default values.
-   */
   onResetFilters(): void {
     this.filterCode = '';
     this.filterStatus = '';
-    this.applyFilters();
+    this.loadPage(0);
   }
 
-  /**
-   * Navigate to the "New order" page.
-   */
   onCreate(): void {
     this.router.navigate(['/orders/new']);
   }
 
-  /**
-   * Navigate to the details view for a given order.
-   */
   onView(order: Order): void {
     this.router.navigate(['/orders', order.id]);
   }
 
-  /**
-   * Navigate to the edit view for a given order.
-   */
   onEdit(order: Order): void {
     this.router.navigate(['/orders', order.id, 'edit']);
   }
 
-  /**
-   * Delete an order after confirmation, then reload the list.
-   */
   onDelete(order: Order): void {
     const confirmed = window.confirm(
       `Do you really want to delete order "${order.code}"?`,
@@ -140,15 +143,69 @@ export class OrdersListComponent implements OnInit {
     this.error = null;
 
     this.orderService.delete(order.id).subscribe({
-      next: () => {
-        // Re-load from backend (keeps logic simple and robust)
-        this.loadOrders();
-      },
-      error: (err) => {
+      next: () => this.loadPage(this.page),
+      error: (err: unknown) => {
         console.error('Failed to delete order', err);
         this.error = 'Failed to delete order.';
         this.loading = false;
       },
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Template compatibility (your HTML expects these)
+  // ---------------------------------------------------------------------------
+
+  get hasPreviousPage(): boolean {
+    return !this.loading && this.page > 0;
+  }
+
+  get hasNextPage(): boolean {
+    return !this.loading && this.page < this.totalPages - 1;
+  }
+
+  get fromIndex(): number {
+    if (this.totalElements === 0) {
+      return 0;
+    }
+    return this.page * this.size + 1;
+  }
+
+  get toIndex(): number {
+    const raw = (this.page * this.size) + this.orders.length;
+    return Math.min(raw, this.totalElements);
+  }
+
+  goToFirstPage(): void {
+    if (this.hasPreviousPage) {
+      this.loadPage(0);
+    }
+  }
+
+  goToPreviousPage(): void {
+    if (this.hasPreviousPage) {
+      this.loadPage(this.page - 1);
+    }
+  }
+
+  goToNextPage(): void {
+    if (this.hasNextPage) {
+      this.loadPage(this.page + 1);
+    }
+  }
+
+  goToLastPage(): void {
+    if (this.hasNextPage && this.totalPages > 0) {
+      this.loadPage(this.totalPages - 1);
+    }
+  }
+
+    /**
+   * Template compatibility:
+   * Older template uses `filteredOrders`.
+   * With server-side paging, the "current page slice" is `orders`.
+   */
+  get filteredOrders(): Order[] {
+    return this.orders;
   }
 }
