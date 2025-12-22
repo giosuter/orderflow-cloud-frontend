@@ -12,5 +12,5 @@
  */
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:8080/orderflow-api/api',
+  apiBaseUrl: 'http://localhost:8080/orderflow-api',
 };

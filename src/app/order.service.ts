@@ -1,99 +1,81 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../environments/environment';
-import { Order, OrderStatus } from './order.model';
-import { OrdersPageResponse } from './orders-page-response.model';
+import { Order } from './order.model';
 
-export interface CreateOrderPayload {
-  code: string;
-  status?: OrderStatus;
-  customerName: string;
-  total: number;
-
-  // Persisted text field
-  comment?: string;
+export interface PageResponse<T> {
+  content: T[];
+  number: number;         // 0-based page index
+  size: number;           // page size
+  totalElements: number;  // total rows
+  totalPages: number;
 }
 
-export interface UpdateOrderPayload {
-  code: string;
-  status?: OrderStatus;
-  customerName: string;
-  total: number;
-
-  // Persisted text field
-  comment?: string;
-}
-
-export interface OrderSearchParams {
-  code?: string;
-  status?: OrderStatus;
-}
-
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class OrderService {
-  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly http = inject(HttpClient);
 
-  constructor(private readonly http: HttpClient) {}
+  /**
+   * Your environment has: { production: boolean; apiBaseUrl: string; }
+   * In dev with proxy, apiBaseUrl is typically '' (empty) OR something like '/orderflow-api'.
+   */
+  private readonly baseUrl = `${environment.apiBaseUrl}/api/orders`;
 
-  getAll(): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.baseUrl}/orders`);
+  list(page = 0, size = 10, sortBy = 'id', sortDir: 'asc' | 'desc' = 'desc'): Observable<Order[]> {
+    const params = new HttpParams()
+      .set('page', String(page))
+      .set('size', String(size))
+      .set('sortBy', sortBy)
+      .set('sortDir', sortDir);
+
+    return this.http.get<Order[]>(this.baseUrl, { params });
   }
 
-  search(params: OrderSearchParams): Observable<Order[]> {
-    let httpParams = new HttpParams();
-
-    if (params.code && params.code.trim() !== '') {
-      httpParams = httpParams.set('code', params.code.trim());
-    }
-    if (params.status) {
-      httpParams = httpParams.set('status', params.status);
-    }
-
-    return this.http.get<Order[]>(`${this.baseUrl}/orders/search`, {
-      params: httpParams,
-    });
-  }
-
-  searchPaged(
-    term: string | null,
-    status: OrderStatus | null,
-    page: number,
-    size: number,
-  ): Observable<OrdersPageResponse> {
+  /**
+   * Use only if backend returns Spring Page<T>.
+   * If backend returns an array (as your curl showed earlier), don't call this method.
+   */
+  listPaged(
+    q: string,
+    page = 0,
+    size = 10,
+    sortBy = 'id',
+    sortDir: 'asc' | 'desc' = 'desc'
+  ): Observable<PageResponse<Order>> {
     let params = new HttpParams()
       .set('page', String(page))
-      .set('size', String(size));
+      .set('size', String(size))
+      .set('sortBy', sortBy)
+      .set('sortDir', sortDir);
 
-    if (term && term.trim() !== '') {
-      params = params.set('customer', term.trim());
+    if (q && q.trim().length > 0) {
+      params = params.set('q', q.trim());
     }
 
-    if (status) {
-      params = params.set('status', status);
-    }
-
-    return this.http.get<OrdersPageResponse>(`${this.baseUrl}/orders/search`, {
-      params,
-    });
+    return this.http.get<PageResponse<Order>>(this.baseUrl, { params });
   }
 
   findById(id: number): Observable<Order> {
-    return this.http.get<Order>(`${this.baseUrl}/orders/${id}`);
+    return this.http.get<Order>(`${this.baseUrl}/${id}`);
   }
 
-  create(payload: CreateOrderPayload): Observable<Order> {
-    return this.http.post<Order>(`${this.baseUrl}/orders`, payload);
+  create(body: Partial<Order>): Observable<Order> {
+    return this.http.post<Order>(this.baseUrl, body);
   }
 
-  update(id: number, payload: UpdateOrderPayload): Observable<Order> {
-    return this.http.put<Order>(`${this.baseUrl}/orders/${id}`, payload);
+  update(id: number, body: Partial<Order>): Observable<Order> {
+    return this.http.put<Order>(`${this.baseUrl}/${id}`, body);
   }
 
+  /** canonical delete */
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/orders/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  /** compatibility with your OrdersListComponent */
+  deleteById(id: number): Observable<void> {
+    return this.delete(id);
   }
 }

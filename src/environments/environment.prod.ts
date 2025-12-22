@@ -11,5 +11,5 @@
  */
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://devprojects.ch/orderflow-api/api',
+  apiBaseUrl: '/orderflow-api',
 };

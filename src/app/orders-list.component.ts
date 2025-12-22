@@ -1,211 +1,200 @@
-// Path: src/app/orders-list.component.ts
-//
-// OrdersListComponent
-// - Uses the paged backend endpoint (OrdersPageResponse)
-// - Provides pagination controls
-// - Uses ngx-translate for labels
-//
-// IMPORTANT behavior fix:
-// Angular may reuse this component instance when navigating back from
-// /orders/:id or /orders/:id/edit. In that case ngOnInit() might NOT re-run,
-// so the list would still show stale data.
-// We therefore listen to Router NavigationEnd events and reload the current page
-// whenever we land on "/orders".
-//
-// IMPORTANT template compatibility:
-// Your HTML currently calls goToFirstPage/goToPreviousPage/goToNextPage/goToLastPage
-// and reads hasPreviousPage/hasNextPage/fromIndex/toIndex.
-// We provide these methods/properties so the template compiles.
-
-import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { Subscription, filter } from 'rxjs';
+import { Router, RouterModule } from '@angular/router';
 
-import { Order, OrderStatus } from './order.model';
 import { OrderService } from './order.service';
-import { OrdersPageResponse } from './orders-page-response.model';
+import { Order } from './order.model';
+
+type SortDir = 'asc' | 'desc';
 
 @Component({
   selector: 'app-orders-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TranslateModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './orders-list.component.html',
   styleUrls: ['./orders-list.component.scss'],
 })
-export class OrdersListComponent implements OnInit, OnDestroy {
+export class OrdersListComponent implements OnInit {
+  private readonly orderService = inject(OrderService);
+  private readonly router = inject(Router);
+
+  // full dataset from backend (because backend currently returns an array)
+  private allOrders: Order[] = [];
+
+  // what the table displays (current page slice)
   orders: Order[] = [];
 
-  loading = false;
-  error: string | null = null;
+  q = '';
+  page = 0; // 0-based
+  size = 10;
 
-  // Your filter input in HTML uses [(ngModel)]="filterCode" and [(ngModel)]="filterStatus"
-  // Keep those names to match the template.
-  filterCode = '';
-  filterStatus: '' | OrderStatus = '';
-
-  statusOptions: OrderStatus[] = [
-    'NEW',
-    'PROCESSING',
-    'PAID',
-    'SHIPPED',
-    'CANCELLED',
-  ];
-
-  page = 0;
-  size = 5;
-  totalPages = 0;
   totalElements = 0;
+  totalPages = 0;
 
-  private routerSub?: Subscription;
+  sortBy: keyof Order | 'customerName' | 'createdAt' | 'status' | 'total' | 'code' | 'id' = 'id';
+  sortDir: SortDir = 'desc';
 
-  constructor(
-    private readonly orderService: OrderService,
-    private readonly router: Router,
-  ) {}
+  loading = false;
 
   ngOnInit(): void {
     this.loadPage(0);
-
-    this.routerSub = this.router.events
-      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe((e) => {
-        const url = e.urlAfterRedirects || e.url;
-        if (url === '/orders' || url.startsWith('/orders?')) {
-          this.loadPage(this.page);
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.routerSub?.unsubscribe();
   }
 
   loadPage(page: number): void {
+    const safePage = Number.isFinite(page) && page >= 0 ? page : 0;
+    this.page = safePage;
+
     this.loading = true;
-    this.error = null;
 
-    const term =
-      this.filterCode.trim() === '' ? null : this.filterCode.trim();
-    const status =
-      this.filterStatus === '' ? null : this.filterStatus;
+    // Backend currently returns an array even when page/size are passed.
+    // So we fetch the array and paginate in the UI.
+    this.orderService.list(0, 1000000, String(this.sortBy), this.sortDir).subscribe({
+      next: (data: Order[]) => {
+        this.allOrders = Array.isArray(data) ? data : [];
 
-    this.orderService.searchPaged(term, status, page, this.size).subscribe({
-      next: (res: OrdersPageResponse) => {
-        this.orders = res.content;
-        this.page = res.page;
-        this.size = res.size;
-        this.totalPages = res.totalPages;
-        this.totalElements = res.totalElements;
-        this.loading = false;
+        // optional: quick client-side filter by q (code/customer/status)
+        const filtered = this.applyFilter(this.allOrders, this.q);
+
+        // client-side sort (keeps your sort header working)
+        const sorted = this.applySort(filtered, this.sortBy, this.sortDir);
+
+        this.totalElements = sorted.length;
+        this.totalPages = Math.max(1, Math.ceil(this.totalElements / this.size));
+
+        // clamp page if needed
+        if (this.page > this.totalPages - 1) {
+          this.page = this.totalPages - 1;
+        }
+        if (this.page < 0) {
+          this.page = 0;
+        }
+
+        const start = this.page * this.size;
+        const end = start + this.size;
+
+        this.orders = sorted.slice(start, end);
       },
       error: (err: unknown) => {
-        console.error('Failed to load orders page', err);
-        this.error = 'Failed to load orders.';
+        console.error('Failed to load orders', err);
+        this.allOrders = [];
+        this.orders = [];
+        this.totalElements = 0;
+        this.totalPages = 0;
+      },
+      complete: () => {
         this.loading = false;
       },
     });
   }
 
-  onSearch(): void {
-    this.loadPage(0);
-  }
-
-  onResetFilters(): void {
-    this.filterCode = '';
-    this.filterStatus = '';
-    this.loadPage(0);
-  }
-
-  onCreate(): void {
-    this.router.navigate(['/orders/new']);
-  }
-
-  onView(order: Order): void {
-    this.router.navigate(['/orders', order.id]);
-  }
-
-  onEdit(order: Order): void {
-    this.router.navigate(['/orders', order.id, 'edit']);
-  }
-
-  onDelete(order: Order): void {
-    const confirmed = window.confirm(
-      `Do you really want to delete order "${order.code}"?`,
-    );
-    if (!confirmed) {
-      return;
+  setSort(field: any): void {
+    if (this.sortBy === field) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = field;
+      this.sortDir = 'asc';
     }
-
-    this.loading = true;
-    this.error = null;
-
-    this.orderService.delete(order.id).subscribe({
-      next: () => this.loadPage(this.page),
-      error: (err: unknown) => {
-        console.error('Failed to delete order', err);
-        this.error = 'Failed to delete order.';
-        this.loading = false;
-      },
-    });
-  }
-
-  // ---------------------------------------------------------------------------
-  // Template compatibility (your HTML expects these)
-  // ---------------------------------------------------------------------------
-
-  get hasPreviousPage(): boolean {
-    return !this.loading && this.page > 0;
-  }
-
-  get hasNextPage(): boolean {
-    return !this.loading && this.page < this.totalPages - 1;
-  }
-
-  get fromIndex(): number {
-    if (this.totalElements === 0) {
-      return 0;
-    }
-    return this.page * this.size + 1;
-  }
-
-  get toIndex(): number {
-    const raw = (this.page * this.size) + this.orders.length;
-    return Math.min(raw, this.totalElements);
+    this.loadPage(0);
   }
 
   goToFirstPage(): void {
-    if (this.hasPreviousPage) {
-      this.loadPage(0);
-    }
+    this.loadPage(0);
   }
 
   goToPreviousPage(): void {
-    if (this.hasPreviousPage) {
-      this.loadPage(this.page - 1);
-    }
+    this.loadPage(this.page - 1);
   }
 
   goToNextPage(): void {
-    if (this.hasNextPage) {
-      this.loadPage(this.page + 1);
-    }
+    this.loadPage(this.page + 1);
   }
 
   goToLastPage(): void {
-    if (this.hasNextPage && this.totalPages > 0) {
-      this.loadPage(this.totalPages - 1);
+    this.loadPage(this.totalPages - 1);
+  }
+
+  editOrder(id: number): void {
+    this.router.navigate(['/orders', id, 'edit']);
+  }
+
+  deleteOrder(id: number): void {
+    if (!confirm(`Delete order #${id}?`)) return;
+
+    this.loading = true;
+    this.orderService.delete(id).subscribe({
+      next: () => this.loadPage(this.page),
+      error: (err: unknown) => {
+        console.error('Delete failed', err);
+        this.loading = false;
+      },
+    });
+  }
+
+  // UI helpers
+  formatMoney(value: any): string {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return '-';
+    return n.toFixed(2);
+  }
+
+  formatDate(value: any): string {
+    if (!value) return '-';
+    try {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return '-';
+      return d.toLocaleString();
+    } catch {
+      return '-';
     }
   }
 
-    /**
-   * Template compatibility:
-   * Older template uses `filteredOrders`.
-   * With server-side paging, the "current page slice" is `orders`.
-   */
-  get filteredOrders(): Order[] {
-    return this.orders;
+  isCancelled(o: Order): boolean {
+    return String((o as any).status || '').toUpperCase() === 'CANCELLED';
+  }
+  isPaid(o: Order): boolean {
+    return String((o as any).status || '').toUpperCase() === 'PAID';
+  }
+  isShipped(o: Order): boolean {
+    return String((o as any).status || '').toUpperCase() === 'SHIPPED';
+  }
+  isNew(o: Order): boolean {
+    return String((o as any).status || '').toUpperCase() === 'NEW';
+  }
+
+  private applyFilter(items: Order[], q: string): Order[] {
+    const s = (q || '').trim().toLowerCase();
+    if (!s) return items;
+
+    return items.filter((o) => {
+      const code = String((o as any).code ?? '').toLowerCase();
+      const customer = String((o as any).customerName ?? '').toLowerCase();
+      const status = String((o as any).status ?? '').toLowerCase();
+      return code.includes(s) || customer.includes(s) || status.includes(s);
+    });
+  }
+
+  private applySort(items: Order[], sortBy: any, sortDir: SortDir): Order[] {
+    const dir = sortDir === 'asc' ? 1 : -1;
+
+    const getVal = (o: any) => {
+      const v = o?.[sortBy];
+      // normalize for compare
+      if (v === null || v === undefined) return '';
+      return v;
+    };
+
+    return [...items].sort((a: any, b: any) => {
+      const va = getVal(a);
+      const vb = getVal(b);
+
+      if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+
+      const sa = String(va).toLowerCase();
+      const sb = String(vb).toLowerCase();
+      if (sa < sb) return -1 * dir;
+      if (sa > sb) return 1 * dir;
+      return 0;
+    });
   }
 }
