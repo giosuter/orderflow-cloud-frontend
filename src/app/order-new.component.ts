@@ -1,89 +1,62 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
+import { Order, OrderStatus } from './order.model';
 import { OrderService } from './order.service';
 
 @Component({
   selector: 'app-order-new',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslateModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './order-new.component.html',
-  styleUrls: ['./order-new.component.scss']
+  styleUrls: ['./order-new.component.scss'],
 })
-export class OrderNewComponent implements OnInit {
+export class OrderNewComponent {
+  private readonly orderService = inject(OrderService);
+  private readonly router = inject(Router);
 
-  orderForm!: FormGroup;
-  isSaving = false;
-  saveError: string | null = null;
+  saving = false;
+  errorMsg = '';
 
-  // Must match your backend enum values
-  statuses: string[] = ['NEW', 'PROCESSING', 'PAID', 'SHIPPED', 'CANCELLED'];
+  // Form model
+  form: Partial<Order> = {
+    code: '',
+    customerName: '',
+    total: 0,
+    status: 'NEW',
+    description: '',
+  };
 
-  constructor(
-    private fb: FormBuilder,
-    private orderService: OrderService,
-    private router: Router,
-    private translate: TranslateService
-  ) {}
+  readonly statuses: OrderStatus[] = ['NEW', 'PROCESSING', 'PAID', 'SHIPPED', 'CANCELLED'];
 
-  ngOnInit(): void {
-    this.orderForm = this.fb.group({
-      code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      customerName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      status: ['NEW', Validators.required],
-      total: [null, [Validators.required, Validators.min(0)]],
-      comment: ['']
-    });
-  }
+  save(): void {
+    this.errorMsg = '';
+    this.saving = true;
 
-  // any → avoid strict template typing noise
-  get f(): any {
-    return this.orderForm.controls;
-  }
+    const payload: Partial<Order> = {
+      code: String(this.form.code ?? '').trim(),
+      customerName: String(this.form.customerName ?? '').trim() || undefined,
+      total: Number(this.form.total ?? 0),
+      status: (this.form.status ?? 'NEW') as OrderStatus,
+      description: String(this.form.description ?? '').trim() || undefined,
+    };
 
-  onSubmit(): void {
-    this.saveError = null;
-
-    if (this.orderForm.invalid) {
-      this.orderForm.markAllAsTouched();
-      this.saveError = this.translate.instant('ORDERS.FORM.VALIDATION_ERROR');
-      return;
-    }
-
-    const newOrder = this.orderForm.value; // plain object from the form
-
-    this.isSaving = true;
-
-    // Cast to any so TS stops comparing Order vs CreateOrderPayload
-    this.orderService.create(newOrder as any).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.router.navigate(['/orders']);
+    this.orderService.create(payload).subscribe({
+      next: () => this.router.navigate(['/orders']),
+      error: (err: unknown) => {
+        console.error('Create failed', err);
+        this.errorMsg = 'Create failed. Check console/network.';
+        this.saving = false;
       },
-      error: () => {
-        this.isSaving = false;
-        this.saveError = this.translate.instant('ORDERS.FORM.SAVE_ERROR');
-      }
+      complete: () => {
+        this.saving = false;
+      },
     });
   }
 
-  onCancel(): void {
-    if (this.orderForm.dirty) {
-      const confirmText = this.translate.instant('ORDERS.FORM.CONFIRM_CANCEL');
-      const confirmed = window.confirm(confirmText);
-      if (!confirmed) {
-        return;
-      }
-    }
+  cancel(): void {
     this.router.navigate(['/orders']);
-  }
-
-  translateStatus(status: string | null | undefined): string {
-    if (!status) {
-      return '';
-    }
-    return 'ORDERS.STATUS.' + status;
   }
 }

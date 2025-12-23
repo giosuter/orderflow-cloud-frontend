@@ -49,43 +49,46 @@ export class OrdersListComponent implements OnInit {
 
     // Backend currently returns an array even when page/size are passed.
     // So we fetch the array and paginate in the UI.
-    this.orderService.list(0, 1000000, String(this.sortBy), this.sortDir).subscribe({
-      next: (data: Order[]) => {
-        this.allOrders = Array.isArray(data) ? data : [];
+    this.orderService
+      .list(0, 1000000, String(this.sortBy), this.sortDir)
+      .subscribe({
+        next: (data: Order[]) => {
+          this.allOrders = Array.isArray(data) ? data : [];
 
-        // optional: quick client-side filter by q (code/customer/status)
-        const filtered = this.applyFilter(this.allOrders, this.q);
+          // optional: quick client-side filter by q (code/customer/status)
+          const filtered = this.applyFilter(this.allOrders, this.q);
 
-        // client-side sort (keeps your sort header working)
-        const sorted = this.applySort(filtered, this.sortBy, this.sortDir);
+          // client-side sort (keeps your sort header working)
+          const sorted = this.applySort(filtered, this.sortBy, this.sortDir);
 
-        this.totalElements = sorted.length;
-        this.totalPages = Math.max(1, Math.ceil(this.totalElements / this.size));
+          this.totalElements = sorted.length;
+          this.totalPages = Math.max(1, Math.ceil(this.totalElements / this.size));
 
-        // clamp page if needed
-        if (this.page > this.totalPages - 1) {
-          this.page = this.totalPages - 1;
-        }
-        if (this.page < 0) {
-          this.page = 0;
-        }
+          // clamp page if needed
+          if (this.page > this.totalPages - 1) {
+            this.page = this.totalPages - 1;
+          }
+          if (this.page < 0) {
+            this.page = 0;
+          }
 
-        const start = this.page * this.size;
-        const end = start + this.size;
+          const start = this.page * this.size;
+          const end = start + this.size;
 
-        this.orders = sorted.slice(start, end);
-      },
-      error: (err: unknown) => {
-        console.error('Failed to load orders', err);
-        this.allOrders = [];
-        this.orders = [];
-        this.totalElements = 0;
-        this.totalPages = 0;
-      },
-      complete: () => {
-        this.loading = false;
-      },
-    });
+          this.orders = sorted.slice(start, end);
+        },
+        error: (err: unknown) => {
+          console.error('Failed to load orders', err);
+          this.allOrders = [];
+          this.orders = [];
+          this.totalElements = 0;
+          this.totalPages = 0;
+          this.loading = false;
+        },
+        complete: () => {
+          this.loading = false;
+        },
+      });
   }
 
   setSort(field: any): void {
@@ -179,7 +182,6 @@ export class OrdersListComponent implements OnInit {
 
     const getVal = (o: any) => {
       const v = o?.[sortBy];
-      // normalize for compare
       if (v === null || v === undefined) return '';
       return v;
     };

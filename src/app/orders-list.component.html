@@ -1,98 +1,91 @@
 <div class="orders">
-  <h2>Orders</h2>
+  <div class="header-row">
+    <h2>Orders</h2>
 
-  <div class="table-wrap">
-    <table class="orders-table" *ngIf="orders && orders.length > 0; else emptyState">
-      <!-- CRITICAL: one shared column grid for header + body -->
-      <colgroup>
-        <col class="col-id" />
-        <col class="col-code" />
-        <col class="col-customer" />
-        <col class="col-created" />
-        <col class="col-total" />
-        <col class="col-status" />
-        <col class="col-actions" />
-      </colgroup>
-
-      <thead>
-        <tr>
-          <th (click)="setSort('id')" class="sortable">
-            ID
-            <span class="sort-indicator" *ngIf="sortBy === 'id'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
-          </th>
-
-          <th (click)="setSort('code')" class="sortable">
-            Code
-            <span class="sort-indicator" *ngIf="sortBy === 'code'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
-          </th>
-
-          <th (click)="setSort('customerName')" class="sortable">
-            Customer
-            <span class="sort-indicator" *ngIf="sortBy === 'customerName'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
-          </th>
-
-          <th (click)="setSort('createdAt')" class="sortable">
-            Created
-            <span class="sort-indicator" *ngIf="sortBy === 'createdAt'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
-          </th>
-
-          <th (click)="setSort('total')" class="sortable right">
-            Total
-            <span class="sort-indicator" *ngIf="sortBy === 'total'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
-          </th>
-
-          <th (click)="setSort('status')" class="sortable">
-            Status
-            <span class="sort-indicator" *ngIf="sortBy === 'status'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
-          </th>
-
-          <th class="actions">Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr
-          *ngFor="let o of orders"
-          [ngClass]="{
-            'row-cancelled': isCancelled(o),
-            'row-paid': isPaid(o),
-            'row-shipped': isShipped(o)
-          }"
-        >
-          <td>{{ o.id }}</td>
-
-          <td>
-            <a [routerLink]="['/orders', o.id]" class="link" (click)="$event.stopPropagation()">
-              {{ o.code }}
-            </a>
-          </td>
-
-          <td>{{ o.customerName ? o.customerName : '-' }}</td>
-          <td>{{ formatDate(o.createdAt) }}</td>
-          <td class="right">{{ formatMoney(o.total) }}</td>
-
-          <td>
-            <span
-              class="status-pill"
-              [ngClass]="{
-                'pill-cancelled': isCancelled(o),
-                'pill-paid': isPaid(o),
-                'pill-shipped': isShipped(o),
-                'pill-new': isNew(o)
-              }"
-            >
-              {{ o.status }}
-            </span>
-          </td>
-
-          <td class="actions">
-            <a href="" (click)="$event.preventDefault(); editOrder(o.id)" class="action-link">Edit</a>
-            <a href="" (click)="$event.preventDefault(); deleteOrder(o.id)" class="action-link danger">Delete</a>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="header-actions">
+      <a class="primary-btn" [routerLink]="['/orders/new']">Create order</a>
+    </div>
   </div>
+
+  <table class="orders-table" *ngIf="orders && orders.length > 0; else emptyState">
+    <thead>
+      <tr>
+        <th (click)="setSort('id')" class="sortable">
+          ID
+          <span class="sort-indicator" *ngIf="sortBy === 'id'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </th>
+
+        <th (click)="setSort('code')" class="sortable">
+          Code
+          <span class="sort-indicator" *ngIf="sortBy === 'code'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </th>
+
+        <th (click)="setSort('customerName')" class="sortable">
+          Customer
+          <span class="sort-indicator" *ngIf="sortBy === 'customerName'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </th>
+
+        <th (click)="setSort('createdAt')" class="sortable">
+          Created
+          <span class="sort-indicator" *ngIf="sortBy === 'createdAt'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </th>
+
+        <th (click)="setSort('total')" class="sortable right">
+          Total
+          <span class="sort-indicator" *ngIf="sortBy === 'total'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </th>
+
+        <th (click)="setSort('status')" class="sortable">
+          Status
+          <span class="sort-indicator" *ngIf="sortBy === 'status'">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        </th>
+
+        <th class="actions">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr
+        *ngFor="let o of orders"
+        [ngClass]="{
+          'row-cancelled': isCancelled(o),
+          'row-paid': isPaid(o),
+          'row-shipped': isShipped(o)
+        }"
+      >
+        <td>{{ o.id }}</td>
+
+        <td>
+          <a [routerLink]="['/orders', o.id]" class="link" (click)="$event.stopPropagation()">
+            {{ o.code }}
+          </a>
+        </td>
+
+        <td>{{ o.customerName ? o.customerName : '-' }}</td>
+        <td>{{ formatDate(o.createdAt) }}</td>
+        <td class="right">{{ formatMoney(o.total) }}</td>
+
+        <td>
+          <span
+            class="status-pill"
+            [ngClass]="{
+              'pill-cancelled': isCancelled(o),
+              'pill-paid': isPaid(o),
+              'pill-shipped': isShipped(o),
+              'pill-new': isNew(o)
+            }"
+          >
+            {{ o.status }}
+          </span>
+        </td>
+
+        <td class="actions">
+          <a href="" (click)="$event.preventDefault(); editOrder(o.id)" class="action-link">Edit</a>
+          <a href="" (click)="$event.preventDefault(); deleteOrder(o.id)" class="action-link danger">Delete</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
   <ng-template #emptyState>
     <div class="empty">No orders found.</div>

@@ -1,15 +1,7 @@
-/**
- * Production environment configuration.
- *
- * The WAR is deployed under Tomcat context path /orderflow-api on Hostpoint.
- * OrderService appends `/orders`, so apiBaseUrl must already include `/api`.
- *
- * Final resolved URL example:
- *   `${environment.apiBaseUrl}/orders`
- * becomes:
- *   https://devprojects.ch/orderflow-api/api/orders
- */
 export const environment = {
   production: true,
-  apiBaseUrl: '/orderflow-api',
+
+  // Production: adjust if you serve frontend and backend under the same host.
+  // If you deploy the Angular app and API under the same domain, this can stay ''.
+  apiBaseUrl: '',
 };

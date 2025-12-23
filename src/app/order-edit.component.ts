@@ -1,129 +1,101 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
+import { Order, OrderStatus } from './order.model';
 import { OrderService } from './order.service';
 
 @Component({
   selector: 'app-order-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslateModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './order-edit.component.html',
-  styleUrls: ['./order-edit.component.scss']
+  styleUrls: ['./order-edit.component.scss'],
 })
 export class OrderEditComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly orderService = inject(OrderService);
 
-  orderForm!: FormGroup;
-  isLoading = true;
-  isSaving = false;
-  loadError: string | null = null;
-  saveError: string | null = null;
-  orderId!: number;
+  id!: number;
 
-  // Must match your backend enum values
-  statuses: string[] = ['NEW', 'PROCESSING', 'PAID', 'SHIPPED', 'CANCELLED'];
+  loading = false;
+  saving = false;
+  errorMsg = '';
 
-  constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private orderService: OrderService,
-    private translate: TranslateService
-  ) {}
+  form: Partial<Order> = {
+    code: '',
+    customerName: '',
+    total: 0,
+    status: 'NEW',
+    description: '',
+  };
+
+  readonly statuses: OrderStatus[] = ['NEW', 'PROCESSING', 'PAID', 'SHIPPED', 'CANCELLED'];
 
   ngOnInit(): void {
-    this.orderForm = this.fb.group({
-      code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      customerName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      status: ['NEW', Validators.required],
-      total: [null, [Validators.required, Validators.min(0)]],
-      comment: ['']
-    });
+    const rawId = this.route.snapshot.paramMap.get('id');
+    this.id = Number(rawId);
 
-    const idParam = this.route.snapshot.paramMap.get('id');
-    if (!idParam) {
-      this.loadError = 'Missing order id';
-      this.isLoading = false;
+    if (!Number.isFinite(this.id)) {
+      this.errorMsg = 'Invalid order id.';
       return;
     }
 
-    this.orderId = Number(idParam);
-    this.loadOrder(this.orderId);
+    this.loadOrder();
   }
 
-  // typed as any on purpose → avoids strict template typing noise
-  get f(): any {
-    return this.orderForm.controls;
-  }
+  private loadOrder(): void {
+    this.errorMsg = '';
+    this.loading = true;
 
-  private loadOrder(id: number): void {
-    this.isLoading = true;
-    this.loadError = null;
-
-    // cast to any to avoid "findById does not exist on type OrderService"
-    (this.orderService as any).findById(id).subscribe({
-      next: (order: any) => {
-        this.isLoading = false;
-        this.orderForm.patchValue({
-          code: order.code,
-          customerName: order.customerName,
-          status: order.status,
-          total: order.total,
-          comment: order.comment ?? ''
-        });
+    this.orderService.findById(this.id).subscribe({
+      next: (o) => {
+        this.form = {
+          code: o.code,
+          customerName: o.customerName ?? '',
+          total: o.total,
+          status: o.status,
+          description: o.description ?? '',
+        };
       },
-      error: () => {
-        this.isLoading = false;
-        this.loadError = 'Failed to load order';
-      }
+      error: (err: unknown) => {
+        console.error('Load order failed', err);
+        this.errorMsg = 'Failed to load order.';
+      },
+      complete: () => {
+        this.loading = false;
+      },
     });
   }
 
-  onSubmit(): void {
-    this.saveError = null;
+  save(): void {
+    this.errorMsg = '';
+    this.saving = true;
 
-    if (this.orderForm.invalid) {
-      this.orderForm.markAllAsTouched();
-      this.saveError = this.translate.instant('ORDERS.FORM.VALIDATION_ERROR');
-      return;
-    }
-
-    const updatedOrder: any = {
-      ...this.orderForm.value,
-      id: this.orderId
+    const payload: Partial<Order> = {
+      code: String(this.form.code ?? '').trim(),
+      customerName: String(this.form.customerName ?? '').trim() || undefined,
+      total: Number(this.form.total ?? 0),
+      status: (this.form.status ?? 'NEW') as OrderStatus,
+      description: String(this.form.description ?? '').trim() || undefined,
     };
 
-    this.isSaving = true;
-
-    // cast to any to avoid UpdateOrderPayload / OrderStatus type mismatch
-    (this.orderService as any).update(this.orderId, updatedOrder).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.router.navigate(['/orders', this.orderId]);
+    this.orderService.update(this.id, payload).subscribe({
+      next: () => this.router.navigate(['/orders']),
+      error: (err: unknown) => {
+        console.error('Update failed', err);
+        this.errorMsg = 'Update failed.';
+        this.saving = false;
       },
-      error: () => {
-        this.isSaving = false;
-        this.saveError = this.translate.instant('ORDERS.FORM.SAVE_ERROR');
-      }
+      complete: () => {
+        this.saving = false;
+      },
     });
   }
 
-  onCancel(): void {
-    if (this.orderForm.dirty) {
-      const confirmText = this.translate.instant('ORDERS.FORM.CONFIRM_CANCEL');
-      const confirmed = window.confirm(confirmText);
-      if (!confirmed) {
-        return;
-      }
-    }
-    this.router.navigate(['/orders', this.orderId]);
-  }
-
-  translateStatus(status: string | null | undefined): string {
-    if (!status) {
-      return '';
-    }
-    return 'ORDERS.STATUS.' + status;
+  cancel(): void {
+    this.router.navigate(['/orders']);
   }
 }

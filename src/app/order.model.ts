@@ -2,8 +2,8 @@
  * Frontend Order model.
  *
  * IMPORTANT:
- * - Must match backend DTO fields.
- * - Backend currently uses "comment" as the description-like text.
+ * - Must match backend JSON fields.
+ * - Backend uses "description" (not "comment") since your Flyway rename.
  */
 
 export type OrderStatus =
@@ -17,14 +17,15 @@ export interface Order {
   id: number;
   code: string;
   status: OrderStatus;
+
   customerName?: string;
   total: number;
 
   /**
-   * Optional free-text comment/description.
-   * Persisted by backend as Order.comment.
+   * Optional free-text description.
+   * Backend field name: description
    */
-  comment?: string;
+  description?: string;
 
   createdAt?: string;
   updatedAt?: string;

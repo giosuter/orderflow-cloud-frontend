@@ -5,77 +5,63 @@ import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 import { Order } from './order.model';
 
-export interface PageResponse<T> {
-  content: T[];
-  number: number;         // 0-based page index
-  size: number;           // page size
-  totalElements: number;  // total rows
-  totalPages: number;
-}
+type SortDir = 'asc' | 'desc';
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
   private readonly http = inject(HttpClient);
 
   /**
-   * Your environment has: { production: boolean; apiBaseUrl: string; }
-   * In dev with proxy, apiBaseUrl is typically '' (empty) OR something like '/orderflow-api'.
+   * We want the frontend to always call:
+   *   /orderflow-api/api/orders
+   *
+   * With proxy.conf.json, environment.apiBaseUrl should be '' so this becomes a relative URL.
    */
-  private readonly baseUrl = `${environment.apiBaseUrl}/api/orders`;
+  private readonly baseUrl = `${environment.apiBaseUrl}/orderflow-api/api/orders`;
 
-  list(page = 0, size = 10, sortBy = 'id', sortDir: 'asc' | 'desc' = 'desc'): Observable<Order[]> {
+  list(page = 0, size = 10, sortBy = 'id', sortDir: SortDir = 'desc'): Observable<Order[]> {
     const params = new HttpParams()
       .set('page', String(page))
       .set('size', String(size))
-      .set('sortBy', sortBy)
-      .set('sortDir', sortDir);
+      .set('sortBy', String(sortBy))
+      .set('sortDir', String(sortDir));
 
     return this.http.get<Order[]>(this.baseUrl, { params });
-  }
-
-  /**
-   * Use only if backend returns Spring Page<T>.
-   * If backend returns an array (as your curl showed earlier), don't call this method.
-   */
-  listPaged(
-    q: string,
-    page = 0,
-    size = 10,
-    sortBy = 'id',
-    sortDir: 'asc' | 'desc' = 'desc'
-  ): Observable<PageResponse<Order>> {
-    let params = new HttpParams()
-      .set('page', String(page))
-      .set('size', String(size))
-      .set('sortBy', sortBy)
-      .set('sortDir', sortDir);
-
-    if (q && q.trim().length > 0) {
-      params = params.set('q', q.trim());
-    }
-
-    return this.http.get<PageResponse<Order>>(this.baseUrl, { params });
   }
 
   findById(id: number): Observable<Order> {
     return this.http.get<Order>(`${this.baseUrl}/${id}`);
   }
 
-  create(body: Partial<Order>): Observable<Order> {
+  create(payload: Partial<Order>): Observable<Order> {
+    // Backend uses "description" (or "comment" depending on your DTO).
+    // Here we send BOTH to be safe during the transition.
+    const body: any = {
+      code: payload.code ?? '',
+      status: payload.status ?? 'NEW',
+      customerName: payload.customerName ?? null,
+      total: payload.total ?? 0,
+      description: (payload as any).description ?? (payload as any).comment ?? null,
+      comment: (payload as any).comment ?? (payload as any).description ?? null,
+    };
+
     return this.http.post<Order>(this.baseUrl, body);
   }
 
-  update(id: number, body: Partial<Order>): Observable<Order> {
+  update(id: number, payload: Partial<Order>): Observable<Order> {
+    const body: any = {
+      code: payload.code ?? '',
+      status: payload.status ?? 'NEW',
+      customerName: payload.customerName ?? null,
+      total: payload.total ?? 0,
+      description: (payload as any).description ?? (payload as any).comment ?? null,
+      comment: (payload as any).comment ?? (payload as any).description ?? null,
+    };
+
     return this.http.put<Order>(`${this.baseUrl}/${id}`, body);
   }
 
-  /** canonical delete */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
-  }
-
-  /** compatibility with your OrdersListComponent */
-  deleteById(id: number): Observable<void> {
-    return this.delete(id);
   }
 }
